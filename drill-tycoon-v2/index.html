@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Drill Tycoon — DMI Tools</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            user-select: none;
+        }
+        
+        :root {
+            --orange: #ff6b35;
+            --gold: #ffd700;
+            --green: #22c55e;
+            --blue: #3b82f6;
+            --purple: #a855f7;
+            --dark: #1a1a2e;
+            --darker: #0f0f1a;
+            --gray: #4a5568;
+            --light-gray: #a0aec0;
+        }
+        
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: var(--darker);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: white;
+        }
+        
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            background: var(--dark);
+        }
+        
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #2d2d44 0%, #1a1a2e 100%);
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .title h1 {
+            font-size: 20px;
+            color: var(--gold);
+        }
+        
+        .title span {
+            font-size: 11px;
+            color: var(--light-gray);
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        
+        .stat-box {
+            background: rgba(0,0,0,0.3);
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 10px;
+            color: var(--light-gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+        
+        .stat-value.money { color: var(--green); }
+        .stat-value.depth { color: var(--blue); }
+        .stat-value.dps { color: var(--gold); }
+        
+        /* Drill Area */
+        #drillArea {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(180deg, #4a3728 0%, #3d2d1f 50%, #2d1f15 100%);
+            overflow: hidden;
+            min-height: 200px;
+        }
+        
+        #drillCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #drillBtn {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--orange) 100%);
+            border: 4px solid rgba(255,255,255,0.3);
+            font-size: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(255,215,0,0.4), 0 8px 0 #cc8800;
+            transition: transform 0.1s, box-shadow 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #drillBtn:active {
+            transform: translateX(-50%) translateY(4px);
+            box-shadow: 0 0 20px rgba(255,215,0,0.4), 0 4px 0 #cc8800;
+        }
+        
+        .layer-info {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(0,0,0,0.7);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+        
+        .layer-name {
+            color: var(--gold);
+            font-weight: bold;
+        }
+        
+        .layer-value {
+            color: var(--green);
+            margin-top: 2px;
+        }
+        
+        .click-damage {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0,0,0,0.7);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            text-align: right;
+        }
+        
+        .damage-value {
+            color: var(--orange);
+            font-weight: bold;
+        }
+        
+        /* Floating numbers */
+        .float-number {
+            position: absolute;
+            pointer-events: none;
+            font-weight: bold;
+            animation: floatUp 1s ease-out forwards;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(0.5); }
+            20% { transform: translateY(-20px) scale(1.2); }
+            100% { opacity: 0; transform: translateY(-80px) scale(0.8); }
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: #252538;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 10px;
+            background: none;
+            border: none;
+            color: var(--light-gray);
+            font-size: 11px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            transition: all 0.2s;
+        }
+        
+        .tab.active {
+            color: var(--gold);
+            background: linear-gradient(to top, rgba(255,215,0,0.1), transparent);
+            border-bottom: 2px solid var(--gold);
+        }
+        
+        .tab-icon {
+            font-size: 18px;
+        }
+        
+        /* Tab Content */
+        #tabContent {
+            height: 240px;
+            overflow-y: auto;
+            background: #1f1f30;
+        }
+        
+        .tab-panel {
+            display: none;
+            padding: 12px;
+        }
+        
+        .tab-panel.active {
+            display: block;
+        }
+        
+        /* Upgrades */
+        .upgrade-section {
+            margin-bottom: 16px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .section-title.bits { color: var(--gold); }
+        .section-title.motors { color: var(--blue); }
+        .section-title.gear { color: var(--purple); }
+        
+        .buy-max-btn {
+            padding: 4px 10px;
+            border-radius: 4px;
+            border: none;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            background: var(--gray);
+            color: white;
+        }
+        
+        .upgrade-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        
+        .upgrade-card:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .upgrade-card.affordable {
+            border-color: var(--green);
+        }
+        
+        .upgrade-card.affordable:hover {
+            background: rgba(34,197,94,0.1);
+        }
+        
+        .upgrade-icon {
+            font-size: 28px;
+            width: 40px;
+            text-align: center;
+        }
+        
+        .upgrade-info {
+            flex: 1;
+        }
+        
+        .upgrade-name {
+            font-size: 13px;
+            font-weight: bold;
+        }
+        
+        .upgrade-effect {
+            font-size: 11px;
+            color: var(--light-gray);
+        }
+        
+        .upgrade-right {
+            text-align: right;
+        }
+        
+        .upgrade-cost {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--green);
+        }
+        
+        .upgrade-owned {
+            font-size: 11px;
+            color: var(--light-gray);
+        }
+        
+        /* Prestige Tab */
+        .prestige-panel {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .prestige-title {
+            font-size: 24px;
+            color: var(--purple);
+            margin-bottom: 8px;
+        }
+        
+        .prestige-desc {
+            font-size: 12px;
+            color: var(--light-gray);
+            margin-bottom: 20px;
+        }
+        
+        .prestige-box {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .prestige-label {
+            font-size: 12px;
+            color: var(--light-gray);
+        }
+        
+        .prestige-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: var(--purple);
+        }
+        
+        .prestige-gain {
+            background: linear-gradient(135deg, rgba(34,197,94,0.2), rgba(34,197,94,0.1));
+            border: 1px solid rgba(34,197,94,0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .prestige-gain-label {
+            font-size: 12px;
+            color: var(--green);
+        }
+        
+        .prestige-gain-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--green);
+        }
+        
+        .prestige-btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            border: none;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--purple), #7c3aed);
+            color: white;
+            transition: all 0.2s;
+        }
+        
+        .prestige-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        .prestige-req {
+            font-size: 11px;
+            color: var(--light-gray);
+            margin-top: 12px;
+        }
+        
+        /* Stats Tab */
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+        
+        .stat-row-label {
+            color: var(--light-gray);
+        }
+        
+        .stat-row-value {
+            font-weight: bold;
+        }
+        
+        /* Shop Tab */
+        .shop-header {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        
+        .shop-title {
+            font-size: 20px;
+            color: var(--gold);
+            margin-bottom: 4px;
+        }
+        
+        .shop-subtitle {
+            font-size: 12px;
+            color: var(--light-gray);
+        }
+        
+        .product-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .product-icon {
+            font-size: 36px;
+            width: 50px;
+            text-align: center;
+        }
+        
+        .product-info {
+            flex: 1;
+        }
+        
+        .product-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--gold);
+        }
+        
+        .product-desc {
+            font-size: 11px;
+            color: var(--light-gray);
+            margin-top: 2px;
+        }
+        
+        .product-price {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--green);
+        }
+        
+        .product-link {
+            display: inline-block;
+            margin-top: 6px;
+            padding: 6px 12px;
+            background: var(--orange);
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        /* Offline Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--dark);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 320px;
+            width: 100%;
+            text-align: center;
+            border: 2px solid var(--gold);
+            animation: modalPop 0.3s ease-out;
+        }
+        
+        @keyframes modalPop {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        .modal-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        
+        .modal-title {
+            font-size: 22px;
+            color: var(--gold);
+            margin-bottom: 8px;
+        }
+        
+        .modal-desc {
+            font-size: 13px;
+            color: var(--light-gray);
+            margin-bottom: 16px;
+        }
+        
+        .modal-stats {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .modal-stat {
+            margin: 8px 0;
+        }
+        
+        .modal-stat-label {
+            font-size: 11px;
+            color: var(--light-gray);
+        }
+        
+        .modal-stat-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .modal-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+            color: white;
+        }
+        
+        /* Prestige animation */
+        .prestige-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(168, 85, 247, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+        
+        .prestige-overlay.show {
+            display: flex;
+            animation: prestigeFade 2.5s ease-in-out forwards;
+        }
+        
+        @keyframes prestigeFade {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; pointer-events: none; }
+        }
+        
+        .prestige-text {
+            text-align: center;
+            animation: prestigeZoom 2.5s ease-out forwards;
+        }
+        
+        @keyframes prestigeZoom {
+            0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+            30% { transform: scale(1.2) rotate(10deg); opacity: 1; }
+            50% { transform: scale(1) rotate(0deg); }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        
+        .prestige-text-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+        
+        .prestige-text-title {
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .prestige-text-gain {
+            font-size: 24px;
+            color: var(--green);
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header>
+            <div class="header-top">
+                <div class="title">
+                    <h1>⛏️ Drill Tycoon</h1>
+                    <span>by DMI Tools</span>
+                </div>
+                <div class="header-buttons">
+                    <button class="icon-btn" id="soundBtn">🔊</button>
+                    <button class="icon-btn" id="settingsBtn">⚙️</button>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-label">💰 Money</div>
+                    <div class="stat-value money" id="moneyDisplay">$0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">📏 Depth</div>
+                    <div class="stat-value depth" id="depthDisplay">0 ft</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">⚡ DPS</div>
+                    <div class="stat-value dps" id="dpsDisplay">0/s</div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Drill Area -->
+        <div id="drillArea">
+            <canvas id="drillCanvas"></canvas>
+            
+            <div class="layer-info">
+                <div>Layer: <span class="layer-name" id="layerName">Topsoil</span></div>
+                <div class="layer-value" id="layerValue">$1/ft</div>
+            </div>
+            
+            <div class="click-damage">
+                <div>Click: <span class="damage-value" id="clickDamage">1 ft</span></div>
+            </div>
+            
+            <button id="drillBtn">🔩</button>
+        </div>
+        
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" data-tab="upgrades">
+                <span class="tab-icon">🔧</span>
+                <span>Upgrades</span>
+            </button>
+            <button class="tab" data-tab="shop">
+                <span class="tab-icon">🛒</span>
+                <span>Shop</span>
+            </button>
+            <button class="tab" data-tab="prestige">
+                <span class="tab-icon">🌟</span>
+                <span>Prestige</span>
+            </button>
+            <button class="tab" data-tab="stats">
+                <span class="tab-icon">📊</span>
+                <span>Stats</span>
+            </button>
+        </div>
+        
+        <!-- Tab Content -->
+        <div id="tabContent">
+            <!-- Upgrades Tab -->
+            <div class="tab-panel active" id="upgradesPanel">
+                <!-- Drill Bits -->
+                <div class="upgrade-section">
+                    <div class="section-header">
+                        <div class="section-title bits">🔩 Drill Bits</div>
+                        <button class="buy-max-btn" data-category="bits">Buy Max</button>
+                    </div>
+                    <div id="bitsUpgrades"></div>
+                </div>
+                
+                <!-- Motors -->
+                <div class="upgrade-section">
+                    <div class="section-header">
+                        <div class="section-title motors">⚙️ Motors</div>
+                        <button class="buy-max-btn" data-category="motors">Buy Max</button>
+                    </div>
+                    <div id="motorsUpgrades"></div>
+                </div>
+                
+                <!-- Gear -->
+                <div class="upgrade-section">
+                    <div class="section-header">
+                        <div class="section-title gear">🎯 Pro Gear</div>
+                        <button class="buy-max-btn" data-category="gear">Buy Max</button>
+                    </div>
+                    <div id="gearUpgrades"></div>
+                </div>
+            </div>
+            
+            <!-- Shop Tab -->
+            <div class="tab-panel" id="shopPanel">
+                <div class="shop-header">
+                    <div class="shop-title">🛒 DMI Tools Shop</div>
+                    <div class="shop-subtitle">Real professional equipment</div>
+                </div>
+                <div id="shopProducts"></div>
+            </div>
+            
+            <!-- Prestige Tab -->
+            <div class="tab-panel" id="prestigePanel">
+                <div class="prestige-panel">
+                    <div class="prestige-title">🌟 New Job Site</div>
+                    <div class="prestige-desc">Start fresh with a permanent earnings multiplier!</div>
+                    
+                    <div class="prestige-box">
+                        <div class="prestige-label">Current Multiplier</div>
+                        <div class="prestige-value" id="currentMulti">1.00x</div>
+                    </div>
+                    
+                    <div class="prestige-gain">
+                        <div class="prestige-gain-label">✨ Prestige Now For</div>
+                        <div class="prestige-gain-value" id="prestigeGain">+0.00x</div>
+                    </div>
+                    
+                    <button class="prestige-btn" id="prestigeBtn" disabled>🚀 Start New Job Site</button>
+                    
+                    <div class="prestige-req">Requires: <span id="prestigeReq">10,000 ft</span> depth</div>
+                </div>
+            </div>
+            
+            <!-- Stats Tab -->
+            <div class="tab-panel" id="statsPanel">
+                <div class="stat-row">
+                    <span class="stat-row-label">📏 Total Depth</span>
+                    <span class="stat-row-value" id="statDepth">0 ft</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-row-label">💰 Total Earned</span>
+                    <span class="stat-row-value" id="statMoney">$0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-row-label">👆 Total Clicks</span>
+                    <span class="stat-row-value" id="statClicks">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-row-label">🌟 Prestige Count</span>
+                    <span class="stat-row-value" id="statPrestige">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-row-label">🔧 Upgrades Bought</span>
+                    <span class="stat-row-value" id="statUpgrades">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-row-label">⏱️ Play Time</span>
+                    <span class="stat-row-value" id="statTime">0:00:00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Offline Progress Modal -->
+    <div class="modal" id="offlineModal">
+        <div class="modal-content">
+            <div class="modal-icon">⛏️</div>
+            <div class="modal-title">Welcome Back!</div>
+            <div class="modal-desc">Your drills kept working while you were away!</div>
+            <div class="modal-stats">
+                <div class="modal-stat">
+                    <div class="modal-stat-label">Depth Drilled</div>
+                    <div class="modal-stat-value" id="offlineDepth" style="color: var(--blue)">0 ft</div>
+                </div>
+                <div class="modal-stat">
+                    <div class="modal-stat-label">Money Earned</div>
+                    <div class="modal-stat-value" id="offlineMoney" style="color: var(--green)">$0</div>
+                </div>
+            </div>
+            <button class="modal-btn" id="offlineClaimBtn">🎉 Claim Rewards!</button>
+        </div>
+    </div>
+    
+    <!-- Prestige Overlay -->
+    <div class="prestige-overlay" id="prestigeOverlay">
+        <div class="prestige-text">
+            <div class="prestige-text-icon">🌟</div>
+            <div class="prestige-text-title">NEW JOB SITE!</div>
+            <div class="prestige-text-gain" id="prestigeGainText">+0.00x Multiplier</div>
+        </div>
+    </div>
+
+    <script>
+    // ============================================
+    // DRILL TYCOON v2
+    // ============================================
+    
+    // --- Formatting ---
+    function formatNumber(n) {
+        if (n >= 1e12) return (n / 1e12).toFixed(2) + 'T';
+        if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+        if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+        if (n >= 1e3) return (n / 1e3).toFixed(2) + 'K';
+        return Math.floor(n).toString();
+    }
+    
+    function formatMoney(n) {
+        return '$' + formatNumber(n);
+    }
+    
+    function formatDepth(n) {
+        return formatNumber(n) + ' ft';
+    }
+    
+    function formatTime(seconds) {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = Math.floor(seconds % 60);
+        return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+    
+    // --- Audio ---
+    const Audio = {
+        ctx: null,
+        enabled: true,
+        
+        init() {
+            try {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            } catch(e) {}
+        },
+        
+        resume() {
+            if (this.ctx?.state === 'suspended') this.ctx.resume();
+        },
+        
+        play(type) {
+            if (!this.enabled || !this.ctx) return;
+            this.resume();
+            
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            
+            switch(type) {
+                case 'click':
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(150, now + 0.1);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                    break;
+                    
+                case 'buy':
+                    [523, 659].forEach((f, i) => {
+                        const o = this.ctx.createOscillator();
+                        const g = this.ctx.createGain();
+                        o.connect(g);
+                        g.connect(this.ctx.destination);
+                        o.frequency.value = f;
+                        g.gain.setValueAtTime(0.15, now + i * 0.1);
+                        g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.2);
+                        o.start(now + i * 0.1);
+                        o.stop(now + i * 0.1 + 0.2);
+                    });
+                    break;
+                    
+                case 'prestige':
+                    [523, 659, 784, 1047].forEach((f, i) => {
+                        const o = this.ctx.createOscillator();
+                        const g = this.ctx.createGain();
+                        o.type = 'triangle';
+                        o.connect(g);
+                        g.connect(this.ctx.destination);
+                        o.frequency.value = f;
+                        g.gain.setValueAtTime(0.2, now + i * 0.15);
+                        g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.15 + 0.4);
+                        o.start(now + i * 0.15);
+                        o.stop(now + i * 0.15 + 0.4);
+                    });
+                    break;
+            }
+        },
+        
+        toggle() {
+            this.enabled = !this.enabled;
+            return this.enabled;
+        }
+    };
+    
+    // --- Layers ---
+    const LAYERS = [
+        { name: 'Topsoil', depth: 0, value: 1, color: '#8B4513' },
+        { name: 'Clay', depth: 100, value: 2, color: '#A0522D' },
+        { name: 'Gravel', depth: 500, value: 5, color: '#696969' },
+        { name: 'Sandstone', depth: 2000, value: 12, color: '#DEB887' },
+        { name: 'Limestone', depth: 8000, value: 30, color: '#D3D3D3' },
+        { name: 'Granite', depth: 30000, value: 80, color: '#808080' },
+        { name: 'Basite', depth: 100000, value: 200, color: '#2F4F4F' },
+        { name: 'Diamond Layer', depth: 500000, value: 1000, color: '#00CED1' },
+        { name: 'Mantle', depth: 2000000, value: 5000, color: '#FF4500' },
+        { name: 'Core', depth: 10000000, value: 50000, color: '#FFD700' }
+    ];
+    
+    // --- Upgrades ---
+    const UPGRADES = {
+        bits: [
+            { id: 'standard', name: 'Standard Bit', icon: '🔩', desc: '+1 ft/click', baseCost: 10, costMult: 1.15, effect: 1 },
+            { id: 'carbide', name: 'Carbide Tip', icon: '💎', desc: '+5 ft/click', baseCost: 100, costMult: 1.18, effect: 5 },
+            { id: 'diamond', name: 'Diamond Core', icon: '✨', desc: '+25 ft/click', baseCost: 1000, costMult: 1.20, effect: 25 },
+            { id: 'tungsten', name: 'Tungsten Elite', icon: '⚡', desc: '+125 ft/click', baseCost: 15000, costMult: 1.22, effect: 125 },
+            { id: 'quantum', name: 'Quantum Edge', icon: '🌌', desc: '+1000 ft/click', baseCost: 500000, costMult: 1.25, effect: 1000 }
+        ],
+        motors: [
+            { id: 'cordless', name: '20V Cordless', icon: '🔧', desc: '+0.5 DPS', baseCost: 50, costMult: 1.15, effect: 0.5 },
+            { id: 'corded', name: 'Pro Corded', icon: '🔌', desc: '+3 DPS', baseCost: 500, costMult: 1.18, effect: 3 },
+            { id: 'rotary', name: 'Rotary Hammer', icon: '🏗️', desc: '+15 DPS', baseCost: 5000, costMult: 1.20, effect: 15 },
+            { id: 'demo', name: 'Demo King', icon: '💪', desc: '+100 DPS', baseCost: 100000, costMult: 1.22, effect: 100 },
+            { id: 'hydraulic', name: 'Hydraulic', icon: '🚀', desc: '+1000 DPS', baseCost: 5000000, costMult: 1.25, effect: 1000 }
+        ],
+        gear: [
+            { id: 'stand', name: 'Drill Stand', icon: '🗼', desc: '+50% click', baseCost: 200, costMult: 1.25, effect: 0.5, type: 'clickMult' },
+            { id: 'vacuum', name: 'Dust Vacuum', icon: '🌀', desc: '+50% DPS', baseCost: 2000, costMult: 1.25, effect: 0.5, type: 'dpsMult' },
+            { id: 'coolant', name: 'Coolant System', icon: '💧', desc: '+100% click', baseCost: 25000, costMult: 1.30, effect: 1, type: 'clickMult' },
+            { id: 'autofeed', name: 'Auto-Feed', icon: '🤖', desc: '+100% DPS', baseCost: 250000, costMult: 1.30, effect: 1, type: 'dpsMult' },
+            { id: 'ai', name: 'AI Core', icon: '🧠', desc: '+200% all', baseCost: 10000000, costMult: 1.35, effect: 2, type: 'allMult' }
+        ]
+    };
+    
+    // --- Products ---
+    const PRODUCTS = [
+        { name: '2" Diamond Core Bit', icon: '💎', price: '$89', desc: 'Professional grade wet core bit', url: 'https://dmitools.com' },
+        { name: '4" Diamond Core Bit', icon: '💎', price: '$149', desc: 'Heavy-duty for reinforced concrete', url: 'https://dmitools.com' },
+        { name: 'Handheld Core Drill', icon: '⚡', price: '$599', desc: '15 Amp motor, 2-speed gearbox', url: 'https://dmitools.com' },
+        { name: 'Pro Drill Stand', icon: '🗼', price: '$449', desc: 'Adjustable angle, vacuum pad base', url: 'https://dmitools.com' },
+        { name: 'Slurry Ring', icon: '💧', price: '$49', desc: 'Magnetic containment for wet drilling', url: 'https://dmitools.com' }
+    ];
+    
+    // --- Game State ---
+    const game = {
+        money: 0,
+        depth: 0,
+        dps: 0,
+        clickDamage: 1,
+        
+        prestigeMulti: 1,
+        prestigeCount: 0,
+        
+        // Stats
+        totalDepth: 0,
+        totalMoney: 0,
+        totalClicks: 0,
+        totalUpgrades: 0,
+        playTime: 0,
+        lastSave: Date.now(),
+        lastUpdate: Date.now(),
+        
+        // Upgrades owned
+        owned: {
+            bits: {},
+            motors: {},
+            gear: {}
+        },
+        
+        // Multipliers from gear
+        clickMult: 1,
+        dpsMult: 1
+    };
+    
+    // --- Canvas ---
+    let canvas, ctx;
+    let particles = [];
+    
+    function initCanvas() {
+        canvas = document.getElementById('drillCanvas');
+        ctx = canvas.getContext('2d');
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+    }
+    
+    function resizeCanvas() {
+        const area = document.getElementById('drillArea');
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = area.clientWidth * dpr;
+        canvas.height = area.clientHeight * dpr;
+        ctx.scale(dpr, dpr);
+        canvas.style.width = area.clientWidth + 'px';
+        canvas.style.height = area.clientHeight + 'px';
+    }
+    
+    function drawDrill() {
+        const w = canvas.width / (window.devicePixelRatio || 1);
+        const h = canvas.height / (window.devicePixelRatio || 1);
+        
+        // Get current layer
+        const layer = getCurrentLayer();
+        
+        // Background gradient based on layer
+        const gradient = ctx.createLinearGradient(0, 0, 0, h);
+        gradient.addColorStop(0, layer.color);
+        gradient.addColorStop(1, shadeColor(layer.color, -30));
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, w, h);
+        
+        // Rock texture
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        for (let i = 0; i < 30; i++) {
+            const x = (Math.sin(i * 123.456 + game.depth * 0.001) * 0.5 + 0.5) * w;
+            const y = (Math.cos(i * 654.321 + game.depth * 0.001) * 0.5 + 0.5) * h;
+            const size = 5 + Math.sin(i) * 10;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Particles
+        particles.forEach((p, i) => {
+            p.y += p.vy;
+            p.x += p.vx;
+            p.life -= 0.02;
+            p.vy += 0.3;
+            
+            if (p.life <= 0) {
+                particles.splice(i, 1);
+                return;
+            }
+            
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(139, 90, 43, ${p.life})`;
+            ctx.fill();
+        });
+    }
+    
+    function shadeColor(color, percent) {
+        const num = parseInt(color.slice(1), 16);
+        const r = Math.min(255, Math.max(0, (num >> 16) + percent));
+        const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + percent));
+        const b = Math.min(255, Math.max(0, (num & 0x0000FF) + percent));
+        return `rgb(${r},${g},${b})`;
+    }
+    
+    function spawnParticles(x, y, count) {
+        for (let i = 0; i < count; i++) {
+            particles.push({
+                x: x,
+                y: y,
+                vx: (Math.random() - 0.5) * 10,
+                vy: -Math.random() * 8 - 2,
+                size: 3 + Math.random() * 5,
+                life: 1
+            });
+        }
+    }
+    
+    // --- Game Logic ---
+    function getCurrentLayer() {
+        for (let i = LAYERS.length - 1; i >= 0; i--) {
+            if (game.depth >= LAYERS[i].depth) return LAYERS[i];
+        }
+        return LAYERS[0];
+    }
+    
+    function calculateClickDamage() {
+        let damage = 1;
+        
+        // Add bit upgrades
+        UPGRADES.bits.forEach(u => {
+            const owned = game.owned.bits[u.id] || 0;
+            damage += u.effect * owned;
+        });
+        
+        // Apply multipliers
+        damage *= game.clickMult;
+        damage *= game.prestigeMulti;
+        
+        return damage;
+    }
+    
+    function calculateDPS() {
+        let dps = 0;
+        
+        // Add motor upgrades
+        UPGRADES.motors.forEach(u => {
+            const owned = game.owned.motors[u.id] || 0;
+            dps += u.effect * owned;
+        });
+        
+        // Apply multipliers
+        dps *= game.dpsMult;
+        dps *= game.prestigeMulti;
+        
+        return dps;
+    }
+    
+    function recalculateMultipliers() {
+        game.clickMult = 1;
+        game.dpsMult = 1;
+        
+        UPGRADES.gear.forEach(u => {
+            const owned = game.owned.gear[u.id] || 0;
+            if (owned > 0) {
+                if (u.type === 'clickMult') game.clickMult += u.effect * owned;
+                else if (u.type === 'dpsMult') game.dpsMult += u.effect * owned;
+                else if (u.type === 'allMult') {
+                    game.clickMult += u.effect * owned;
+                    game.dpsMult += u.effect * owned;
+                }
+            }
+        });
+        
+        game.clickDamage = calculateClickDamage();
+        game.dps = calculateDPS();
+    }
+    
+    function drill() {
+        const layer = getCurrentLayer();
+        const depthGained = game.clickDamage;
+        const moneyGained = depthGained * layer.value;
+        
+        game.depth += depthGained;
+        game.money += moneyGained;
+        game.totalDepth += depthGained;
+        game.totalMoney += moneyGained;
+        game.totalClicks++;
+        
+        // Particles
+        const btn = document.getElementById('drillBtn');
+        const rect = btn.getBoundingClientRect();
+        const area = document.getElementById('drillArea').getBoundingClientRect();
+        spawnParticles(rect.left - area.left + rect.width/2, rect.top - area.top, 5);
+        
+        // Floating number
+        showFloatingNumber(rect.left - area.left + rect.width/2, rect.top - area.top - 20, '+' + formatMoney(moneyGained));
+        
+        Audio.play('click');
+        if ('vibrate' in navigator) navigator.vibrate(10);
+        
+        updateUI();
+    }
+    
+    function showFloatingNumber(x, y, text) {
+        const el = document.createElement('div');
+        el.className = 'float-number';
+        el.textContent = text;
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+        el.style.color = '#22c55e';
+        el.style.fontSize = '18px';
+        document.getElementById('drillArea').appendChild(el);
+        
+        setTimeout(() => el.remove(), 1000);
+    }
+    
+    function getUpgradeCost(upgrade, owned) {
+        return Math.floor(upgrade.baseCost * Math.pow(upgrade.costMult, owned));
+    }
+    
+    function buyUpgrade(category, id) {
+        const upgrade = UPGRADES[category].find(u => u.id === id);
+        if (!upgrade) return;
+        
+        const owned = game.owned[category][id] || 0;
+        const cost = getUpgradeCost(upgrade, owned);
+        
+        if (game.money >= cost) {
+            game.money -= cost;
+            game.owned[category][id] = owned + 1;
+            game.totalUpgrades++;
+            
+            recalculateMultipliers();
+            Audio.play('buy');
+            updateUI();
+            renderUpgrades();
+        }
+    }
+    
+    function buyMax(category) {
+        let bought = true;
+        while (bought) {
+            bought = false;
+            for (const upgrade of UPGRADES[category]) {
+                const owned = game.owned[category][upgrade.id] || 0;
+                const cost = getUpgradeCost(upgrade, owned);
+                if (game.money >= cost) {
+                    game.money -= cost;
+                    game.owned[category][upgrade.id] = owned + 1;
+                    game.totalUpgrades++;
+                    bought = true;
+                }
+            }
+        }
+        recalculateMultipliers();
+        Audio.play('buy');
+        updateUI();
+        renderUpgrades();
+    }
+    
+    function calculatePrestigeGain() {
+        if (game.depth < 10000) return 0;
+        return Math.sqrt(game.depth / 10000) * 0.1;
+    }
+    
+    function prestige() {
+        const gain = calculatePrestigeGain();
+        if (gain <= 0) return;
+        
+        game.prestigeMulti += gain;
+        game.prestigeCount++;
+        
+        // Reset
+        game.money = 0;
+        game.depth = 0;
+        game.owned = { bits: {}, motors: {}, gear: {} };
+        
+        recalculateMultipliers();
+        
+        // Animation
+        document.getElementById('prestigeGainText').textContent = `+${gain.toFixed(2)}x Multiplier`;
+        document.getElementById('prestigeOverlay').classList.add('show');
+        Audio.play('prestige');
+        
+        setTimeout(() => {
+            document.getElementById('prestigeOverlay').classList.remove('show');
+        }, 2500);
+        
+        updateUI();
+        renderUpgrades();
+        save();
+    }
+    
+    // --- Update Loop ---
+    function update() {
+        const now = Date.now();
+        const dt = (now - game.lastUpdate) / 1000;
+        game.lastUpdate = now;
+        game.playTime += dt;
+        
+        // Passive DPS
+        if (game.dps > 0) {
+            const layer = getCurrentLayer();
+            const depthGained = game.dps * dt;
+            const moneyGained = depthGained * layer.value;
+            
+            game.depth += depthGained;
+            game.money += moneyGained;
+            game.totalDepth += depthGained;
+            game.totalMoney += moneyGained;
+        }
+        
+        updateUI();
+        drawDrill();
+        requestAnimationFrame(update);
+    }
+    
+    // --- UI ---
+    function updateUI() {
+        document.getElementById('moneyDisplay').textContent = formatMoney(game.money);
+        document.getElementById('depthDisplay').textContent = formatDepth(game.depth);
+        document.getElementById('dpsDisplay').textContent = formatNumber(game.dps) + '/s';
+        document.getElementById('clickDamage').textContent = formatNumber(game.clickDamage) + ' ft';
+        
+        const layer = getCurrentLayer();
+        document.getElementById('layerName').textContent = layer.name;
+        document.getElementById('layerValue').textContent = '$' + layer.value + '/ft';
+        
+        // Prestige
+        const gain = calculatePrestigeGain();
+        document.getElementById('currentMulti').textContent = game.prestigeMulti.toFixed(2) + 'x';
+        document.getElementById('prestigeGain').textContent = '+' + gain.toFixed(2) + 'x';
+        document.getElementById('prestigeBtn').disabled = gain <= 0;
+        
+        // Stats
+        document.getElementById('statDepth').textContent = formatDepth(game.totalDepth);
+        document.getElementById('statMoney').textContent = formatMoney(game.totalMoney);
+        document.getElementById('statClicks').textContent = formatNumber(game.totalClicks);
+        document.getElementById('statPrestige').textContent = game.prestigeCount;
+        document.getElementById('statUpgrades').textContent = game.totalUpgrades;
+        document.getElementById('statTime').textContent = formatTime(game.playTime);
+    }
+    
+    function renderUpgrades() {
+        ['bits', 'motors', 'gear'].forEach(category => {
+            const container = document.getElementById(category + 'Upgrades') || document.getElementById(category === 'bits' ? 'bitsUpgrades' : category === 'motors' ? 'motorsUpgrades' : 'gearUpgrades');
+            container.innerHTML = '';
+            
+            UPGRADES[category].forEach(upgrade => {
+                const owned = game.owned[category][upgrade.id] || 0;
+                const cost = getUpgradeCost(upgrade, owned);
+                const affordable = game.money >= cost;
+                
+                const card = document.createElement('div');
+                card.className = 'upgrade-card' + (affordable ? ' affordable' : '');
+                card.innerHTML = `
+                    <div class="upgrade-icon">${upgrade.icon}</div>
+                    <div class="upgrade-info">
+                        <div class="upgrade-name">${upgrade.name}</div>
+                        <div class="upgrade-effect">${upgrade.desc}</div>
+                    </div>
+                    <div class="upgrade-right">
+                        <div class="upgrade-cost">${formatMoney(cost)}</div>
+                        <div class="upgrade-owned">Owned: ${owned}</div>
+                    </div>
+                `;
+                card.addEventListener('click', () => buyUpgrade(category, upgrade.id));
+                container.appendChild(card);
+            });
+        });
+    }
+    
+    function renderShop() {
+        const container = document.getElementById('shopProducts');
+        container.innerHTML = '';
+        
+        PRODUCTS.forEach(product => {
+            const card = document.createElement('div');
+            card.className = 'product-card';
+            card.innerHTML = `
+                <div class="product-icon">${product.icon}</div>
+                <div class="product-info">
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-desc">${product.desc}</div>
+                    <div class="product-price">${product.price}</div>
+                    <a href="${product.url}" target="_blank" class="product-link">View Product →</a>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+    
+    // --- Tabs ---
+    function setupTabs() {
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab + 'Panel').classList.add('active');
+            });
+        });
+    }
+    
+    // --- Save/Load ---
+    function save() {
+        const data = {
+            money: game.money,
+            depth: game.depth,
+            prestigeMulti: game.prestigeMulti,
+            prestigeCount: game.prestigeCount,
+            totalDepth: game.totalDepth,
+            totalMoney: game.totalMoney,
+            totalClicks: game.totalClicks,
+            totalUpgrades: game.totalUpgrades,
+            playTime: game.playTime,
+            owned: game.owned,
+            lastSave: Date.now()
+        };
+        localStorage.setItem('drillTycoon', JSON.stringify(data));
+    }
+    
+    function load() {
+        const saved = localStorage.getItem('drillTycoon');
+        if (!saved) return false;
+        
+        try {
+            const data = JSON.parse(saved);
+            Object.assign(game, data);
+            game.lastUpdate = Date.now();
+            recalculateMultipliers();
+            
+            // Calculate offline progress
+            const offlineTime = (Date.now() - data.lastSave) / 1000;
+            if (offlineTime > 60 && game.dps > 0) {
+                const maxOffline = 8 * 3600; // 8 hours max
+                const time = Math.min(offlineTime, maxOffline);
+                const layer = getCurrentLayer();
+                const offlineDepth = game.dps * time * 0.5; // 50% efficiency
+                const offlineMoney = offlineDepth * layer.value;
+                
+                game.depth += offlineDepth;
+                game.money += offlineMoney;
+                game.totalDepth += offlineDepth;
+                game.totalMoney += offlineMoney;
+                
+                // Show modal
+                document.getElementById('offlineDepth').textContent = formatDepth(offlineDepth);
+                document.getElementById('offlineMoney').textContent = formatMoney(offlineMoney);
+                document.getElementById('offlineModal').classList.add('show');
+            }
+            
+            return true;
+        } catch(e) {
+            return false;
+        }
+    }
+    
+    // --- Init ---
+    function init() {
+        initCanvas();
+        setupTabs();
+        
+        // Load save
+        load();
+        recalculateMultipliers();
+        
+        // Render
+        renderUpgrades();
+        renderShop();
+        updateUI();
+        
+        // Events
+        document.getElementById('drillBtn').addEventListener('click', drill);
+        document.getElementById('drillBtn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            drill();
+        }, { passive: false });
+        
+        document.getElementById('soundBtn').addEventListener('click', () => {
+            const enabled = Audio.toggle();
+            document.getElementById('soundBtn').textContent = enabled ? '🔊' : '🔇';
+        });
+        
+        document.getElementById('prestigeBtn').addEventListener('click', prestige);
+        
+        document.getElementById('offlineClaimBtn').addEventListener('click', () => {
+            document.getElementById('offlineModal').classList.remove('show');
+        });
+        
+        document.querySelectorAll('.buy-max-btn').forEach(btn => {
+            btn.addEventListener('click', () => buyMax(btn.dataset.category));
+        });
+        
+        // Audio init
+        document.addEventListener('touchstart', () => Audio.init(), { once: true });
+        document.addEventListener('click', () => Audio.init(), { once: true });
+        
+        // Auto-save
+        setInterval(save, 30000);
+        window.addEventListener('beforeunload', save);
+        
+        // Start
+        game.lastUpdate = Date.now();
+        requestAnimationFrame(update);
+    }
+    
+    window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
