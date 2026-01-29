@@ -1,0 +1,2281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Drill Tycoon 🔩 | DMI Tools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+        body { overscroll-behavior: none; }
+        .drill-btn:active { transform: scale(0.92); }
+        
+        /* Shake animation */
+        .shake { animation: shake 0.1s ease-in-out; }
+        @keyframes shake {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(3px); }
+        }
+        
+        /* Floating numbers - enhanced */
+        .float-up {
+            animation: floatUp 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            pointer-events: none;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(0.5) rotate(-5deg); }
+            20% { opacity: 1; transform: translateY(-15px) scale(1.2) rotate(5deg); }
+            100% { opacity: 0; transform: translateY(-100px) scale(0.8) rotate(-3deg); }
+        }
+        
+        /* Critical hit numbers */
+        .float-crit {
+            animation: floatCrit 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            pointer-events: none;
+        }
+        @keyframes floatCrit {
+            0% { opacity: 1; transform: translateY(0) scale(0.3); filter: brightness(2); }
+            15% { opacity: 1; transform: translateY(-10px) scale(1.8); filter: brightness(1.5); }
+            30% { transform: translateY(-25px) scale(1.4); }
+            100% { opacity: 0; transform: translateY(-120px) scale(0.6); filter: brightness(1); }
+        }
+        
+        /* Pulse glow */
+        .pulse-glow {
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(234, 179, 8, 0.4), inset 0 0 10px rgba(255,255,255,0.1); }
+            50% { box-shadow: 0 0 35px rgba(234, 179, 8, 0.8), inset 0 0 20px rgba(255,255,255,0.2); }
+        }
+        
+        /* Upgrade cards */
+        .upgrade-card { transition: all 0.2s ease; }
+        .upgrade-card:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .upgrade-card:active:not(:disabled) { transform: scale(0.98); }
+        
+        /* Tabs */
+        .tab-btn.active { 
+            border-bottom: 3px solid #eab308; 
+            background: linear-gradient(to top, rgba(234, 179, 8, 0.15), transparent);
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+        
+        /* Number pop */
+        .number-pop { animation: numberPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+        @keyframes numberPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.25); color: #22c55e; }
+            100% { transform: scale(1); }
+        }
+        
+        /* Achievement notification */
+        .achievement-popup {
+            animation: achievementSlide 4s ease-in-out forwards;
+        }
+        @keyframes achievementSlide {
+            0% { transform: translateX(100%); opacity: 0; }
+            10% { transform: translateX(0); opacity: 1; }
+            85% { transform: translateX(0); opacity: 1; }
+            100% { transform: translateX(100%); opacity: 0; }
+        }
+        
+        /* Product toast notification */
+        .product-toast {
+            animation: toastSlide 5s ease-in-out forwards;
+        }
+        @keyframes toastSlide {
+            0% { transform: translateY(100%); opacity: 0; }
+            8% { transform: translateY(0); opacity: 1; }
+            85% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(100%); opacity: 0; }
+        }
+        
+        /* Milestone celebration */
+        .milestone-burst {
+            animation: milestoneBurst 2s ease-out forwards;
+        }
+        @keyframes milestoneBurst {
+            0% { transform: scale(0); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.8; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+        
+        /* Prestige screen */
+        .prestige-overlay {
+            animation: prestigeFade 3s ease-in-out forwards;
+        }
+        @keyframes prestigeFade {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; pointer-events: none; }
+        }
+        
+        .prestige-text {
+            animation: prestigeText 3s ease-out forwards;
+        }
+        @keyframes prestigeText {
+            0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+            30% { transform: scale(1.2) rotate(10deg); opacity: 1; }
+            50% { transform: scale(1) rotate(0deg); }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        
+        /* Sparkle particles */
+        .sparkle {
+            position: absolute;
+            pointer-events: none;
+            animation: sparkle 1s ease-out forwards;
+        }
+        @keyframes sparkle {
+            0% { transform: scale(0) rotate(0deg); opacity: 1; }
+            100% { transform: scale(1) rotate(180deg); opacity: 0; }
+        }
+        
+        /* Tooltip */
+        .tooltip {
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.2s ease;
+        }
+        .has-tooltip:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        /* Buy Max button */
+        .buy-max-btn {
+            transition: all 0.15s ease;
+        }
+        .buy-max-btn:hover {
+            transform: scale(1.05);
+        }
+        .buy-max-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* Modal backdrop */
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+        }
+        
+        /* Offline progress modal */
+        .offline-modal {
+            animation: modalBounce 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        @keyframes modalBounce {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* Sound toggle button */
+        .sound-btn {
+            transition: all 0.2s ease;
+        }
+        .sound-btn:hover {
+            transform: scale(1.1);
+        }
+        .sound-btn.muted {
+            opacity: 0.5;
+        }
+        
+        /* Layer transition flash */
+        .layer-flash {
+            animation: layerFlash 0.5s ease-out;
+        }
+        @keyframes layerFlash {
+            0% { background: rgba(255,255,255,0.5); }
+            100% { background: transparent; }
+        }
+        
+        /* Drill tiers visual enhancement */
+        .drill-tier-1 { filter: drop-shadow(0 0 5px rgba(156, 163, 175, 0.5)); }
+        .drill-tier-2 { filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6)); }
+        .drill-tier-3 { filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.7)); }
+        .drill-tier-4 { filter: drop-shadow(0 0 12px rgba(234, 179, 8, 0.8)); }
+        .drill-tier-5 { filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.9)) brightness(1.2); }
+        
+        /* Chart container */
+        .chart-bar {
+            transition: height 0.3s ease;
+        }
+        
+        /* Product card styles */
+        .product-card {
+            transition: all 0.2s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        
+        /* Unlocked badge */
+        .unlocked-badge {
+            animation: badgePulse 2s ease-in-out infinite;
+        }
+        @keyframes badgePulse {
+            0%, 100% { box-shadow: 0 0 5px rgba(34, 197, 94, 0.5); }
+            50% { box-shadow: 0 0 15px rgba(34, 197, 94, 0.8); }
+        }
+        
+        /* Discount code banner */
+        .discount-banner {
+            background: linear-gradient(135deg, #059669 0%, #10b981 50%, #059669 100%);
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease infinite;
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen overflow-hidden select-none">
+    <!-- Achievement Notifications Container -->
+    <div id="achievementContainer" class="fixed top-16 right-2 z-50 space-y-2 pointer-events-none"></div>
+    
+    <!-- Product Toast Container -->
+    <div id="productToastContainer" class="fixed bottom-20 left-2 right-2 z-40 pointer-events-auto"></div>
+    
+    <!-- Milestone Celebration Overlay -->
+    <div id="milestoneOverlay" class="fixed inset-0 z-40 pointer-events-none flex items-center justify-center hidden">
+        <div id="milestoneText" class="text-4xl font-bold text-yellow-400 text-center"></div>
+    </div>
+    
+    <!-- Prestige Animation Overlay -->
+    <div id="prestigeOverlay" class="fixed inset-0 z-50 pointer-events-none hidden">
+        <div class="absolute inset-0 bg-purple-900/90 prestige-overlay"></div>
+        <div class="absolute inset-0 flex items-center justify-center">
+            <div class="text-center prestige-text">
+                <div class="text-6xl mb-4">🌟</div>
+                <div class="text-4xl font-bold text-purple-300">NEW JOB SITE!</div>
+                <div id="prestigeGainText" class="text-2xl text-green-400 mt-2">+0.00x Multiplier</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Offline Progress Modal -->
+    <div id="offlineModal" class="fixed inset-0 z-50 hidden modal-backdrop bg-black/70 flex items-center justify-center p-4">
+        <div class="offline-modal bg-gray-800 rounded-2xl p-6 max-w-sm w-full border-2 border-yellow-500/50 shadow-2xl">
+            <div class="text-center">
+                <div class="text-5xl mb-3">⛏️</div>
+                <h2 class="text-2xl font-bold text-yellow-400 mb-2">Welcome Back!</h2>
+                <p class="text-gray-400 mb-4">While you were away, your drills kept working!</p>
+                <div class="bg-gray-700 rounded-lg p-4 mb-4">
+                    <div class="text-sm text-gray-400">You drilled</div>
+                    <div id="offlineDepth" class="text-3xl font-bold text-blue-400">0 ft</div>
+                    <div class="text-sm text-gray-400 mt-2">And earned</div>
+                    <div id="offlineMoney" class="text-3xl font-bold text-green-400">$0</div>
+                </div>
+                <button id="offlineClaimBtn" class="w-full py-3 rounded-lg bg-gradient-to-r from-yellow-500 to-orange-500 font-bold text-lg hover:from-yellow-400 hover:to-orange-400 transition-all">
+                    🎉 Claim Rewards!
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 z-50 hidden modal-backdrop bg-black/70 flex items-center justify-center p-4">
+        <div class="offline-modal bg-gray-800 rounded-2xl p-6 max-w-sm w-full border border-gray-600 shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-200">⚙️ Settings</h2>
+                <button id="closeSettings" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+            </div>
+            <div class="space-y-4">
+                <div class="flex justify-between items-center bg-gray-700 rounded-lg p-3">
+                    <span>🔊 Sound Effects</span>
+                    <button id="toggleSfx" class="w-12 h-6 rounded-full bg-green-500 relative transition-colors">
+                        <div class="absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform transform translate-x-6"></div>
+                    </button>
+                </div>
+                <div class="flex justify-between items-center bg-gray-700 rounded-lg p-3">
+                    <span>🎵 Background Music</span>
+                    <button id="toggleMusic" class="w-12 h-6 rounded-full bg-gray-500 relative transition-colors">
+                        <div class="absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"></div>
+                    </button>
+                </div>
+                <div class="flex justify-between items-center bg-gray-700 rounded-lg p-3">
+                    <span>🔢 Scientific Notation</span>
+                    <button id="toggleNotation" class="w-12 h-6 rounded-full bg-gray-500 relative transition-colors">
+                        <div class="absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"></div>
+                    </button>
+                </div>
+                <div class="flex justify-between items-center bg-gray-700 rounded-lg p-3">
+                    <span>🔔 Idle Notifications</span>
+                    <button id="toggleNotifs" class="w-12 h-6 rounded-full bg-gray-500 relative transition-colors">
+                        <div class="absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"></div>
+                    </button>
+                </div>
+                <button id="resetGame" class="w-full py-2 rounded-lg bg-red-600/30 border border-red-500 text-red-400 hover:bg-red-600/50 transition-colors mt-4">
+                    🗑️ Reset All Progress
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="app" class="max-w-lg mx-auto h-screen flex flex-col">
+        <!-- Header Stats -->
+        <div class="bg-gray-800 p-3 border-b border-gray-700">
+            <div class="flex justify-between items-center mb-2">
+                <h1 class="text-xl font-bold text-yellow-400 flex items-center gap-2">
+                    <span>⛏️</span> Drill Tycoon
+                    <span class="text-xs text-gray-500 font-normal">by DMI</span>
+                </h1>
+                <div class="flex items-center gap-2">
+                    <button id="soundToggle" class="sound-btn text-lg" title="Toggle Sound">🔊</button>
+                    <button id="settingsBtn" class="text-lg hover:scale-110 transition-transform" title="Settings">⚙️</button>
+                    <div class="text-xs text-gray-400">
+                        <span id="prestigeMulti" class="text-purple-400 font-bold">1.00x</span>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-center">
+                <div class="bg-gray-700 rounded-lg p-2">
+                    <div class="text-xs text-gray-400">💰 Money</div>
+                    <div id="money" class="text-lg font-bold text-green-400">$0</div>
+                </div>
+                <div class="bg-gray-700 rounded-lg p-2">
+                    <div class="text-xs text-gray-400">📏 Depth</div>
+                    <div id="depth" class="text-lg font-bold text-blue-400">0 ft</div>
+                </div>
+                <div class="bg-gray-700 rounded-lg p-2">
+                    <div class="text-xs text-gray-400">⚡ DPS</div>
+                    <div id="dps" class="text-lg font-bold text-yellow-400">0/s</div>
+                </div>
+            </div>
+            <!-- Next Milestone Indicator -->
+            <div class="mt-2 bg-gray-700/50 rounded-lg p-2">
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-gray-400">🎯 Next Milestone:</span>
+                    <span id="nextMilestone" class="text-yellow-300 font-medium">1,000 ft</span>
+                </div>
+                <div class="w-full bg-gray-600 rounded-full h-1.5 mt-1">
+                    <div id="milestoneProgress" class="bg-gradient-to-r from-yellow-500 to-orange-500 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Canvas Drill Area -->
+        <div id="drillArea" class="flex-1 relative bg-gradient-to-b from-amber-900 via-amber-800 to-stone-900 overflow-hidden" style="min-height: 200px;">
+            <canvas id="drillCanvas" class="absolute inset-0 w-full h-full"></canvas>
+            <div id="floatingNumbers" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
+            
+            <!-- Drill Button Overlay -->
+            <button id="drillBtn" class="drill-btn absolute bottom-4 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 shadow-lg flex items-center justify-center text-5xl pulse-glow active:shadow-inner border-4 border-yellow-300 drill-tier-1">
+                🔩
+            </button>
+            
+            <!-- Depth Indicator -->
+            <div class="absolute left-2 top-2 bg-black/60 backdrop-blur rounded-lg px-3 py-2 text-xs">
+                <div class="flex items-center gap-2">
+                    <span>🗺️</span>
+                    <div>
+                        <div>Layer: <span id="layerName" class="text-yellow-300 font-medium">Topsoil</span></div>
+                        <div>Value: <span id="layerValue" class="text-green-300">$1/ft</span></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Click Damage Indicator -->
+            <div class="absolute right-2 top-2 bg-black/60 backdrop-blur rounded-lg px-3 py-2 text-xs text-right">
+                <div>Click: <span id="clickDamage" class="text-orange-300 font-bold">1 ft</span></div>
+                <div>Tier: <span id="drillTier" class="text-purple-300">Starter</span></div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="bg-gray-800 flex border-t border-gray-700">
+            <button class="tab-btn active flex-1 py-2 text-xs font-medium" data-tab="upgrades">🔧 Upgrades</button>
+            <button class="tab-btn flex-1 py-2 text-xs font-medium" data-tab="shop">🛒 DMI Shop</button>
+            <button class="tab-btn flex-1 py-2 text-xs font-medium" data-tab="prestige">🌟 Prestige</button>
+            <button class="tab-btn flex-1 py-2 text-xs font-medium" data-tab="achievements">🏆 Feats</button>
+            <button class="tab-btn flex-1 py-2 text-xs font-medium" data-tab="stats">📊 Stats</button>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="tabContent" class="bg-gray-800 h-64 overflow-y-auto">
+            <!-- Upgrades Tab -->
+            <div id="upgradesTab" class="tab-panel p-3 space-y-3">
+                <!-- DMI Tools Drill Bits -->
+                <div class="mb-3">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-yellow-400 font-bold flex items-center gap-1">
+                            <span>🔩</span> DMI Drill Bits <span class="text-xs text-gray-400">(+Damage)</span>
+                        </h3>
+                        <button class="buy-max-btn text-xs bg-yellow-600 hover:bg-yellow-500 px-2 py-1 rounded font-medium" data-category="drillBits">
+                            Buy Max
+                        </button>
+                    </div>
+                    <div id="drillBits" class="space-y-2"></div>
+                </div>
+                
+                <!-- DMI Motors -->
+                <div class="mb-3">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-blue-400 font-bold flex items-center gap-1">
+                            <span>⚙️</span> DMI Motors <span class="text-xs text-gray-400">(+Auto DPS)</span>
+                        </h3>
+                        <button class="buy-max-btn text-xs bg-blue-600 hover:bg-blue-500 px-2 py-1 rounded font-medium" data-category="motors">
+                            Buy Max
+                        </button>
+                    </div>
+                    <div id="motors" class="space-y-2"></div>
+                </div>
+                
+                <!-- DMI Accessories -->
+                <div class="mb-3">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-purple-400 font-bold flex items-center gap-1">
+                            <span>🎯</span> DMI Pro Gear <span class="text-xs text-gray-400">(+Bonuses)</span>
+                        </h3>
+                        <button class="buy-max-btn text-xs bg-purple-600 hover:bg-purple-500 px-2 py-1 rounded font-medium" data-category="accessories">
+                            Buy Max
+                        </button>
+                    </div>
+                    <div id="accessories" class="space-y-2"></div>
+                </div>
+            </div>
+
+            <!-- DMI Shop Tab -->
+            <div id="shopTab" class="tab-panel p-3 hidden">
+                <!-- Discount Banner (shown after first prestige) -->
+                <div id="discountBanner" class="hidden discount-banner rounded-lg p-3 mb-4 text-center">
+                    <div class="text-white font-bold text-sm">🎉 DRILLMASTER DISCOUNT!</div>
+                    <div class="text-white/90 text-xs mt-1">Use code <span class="bg-white/20 px-2 py-0.5 rounded font-mono font-bold">DRILLMASTER10</span> for 10% off!</div>
+                    <a href="https://dmitools.com" target="_blank" class="inline-block mt-2 bg-white/20 hover:bg-white/30 text-white text-xs px-3 py-1 rounded transition-colors">
+                        Shop Now →
+                    </a>
+                </div>
+                
+                <h3 class="text-xl font-bold text-yellow-400 mb-3 flex items-center gap-2">
+                    🛒 Real DMI Tools
+                    <span class="text-xs text-gray-400 font-normal">dmitools.com</span>
+                </h3>
+                <p class="text-gray-400 text-xs mb-4">Level up your real drilling game with professional DMI equipment!</p>
+                
+                <div id="shopProducts" class="space-y-4"></div>
+            </div>
+
+            <!-- Prestige Tab -->
+            <div id="prestigeTab" class="tab-panel p-4 hidden">
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold text-purple-400 mb-2">🌟 New Job Site</h3>
+                    <p class="text-gray-400 text-sm mb-4">Pack up and move to a fresh site! Keep your experience as a permanent earnings multiplier.</p>
+                    
+                    <div class="bg-gray-700 rounded-lg p-4 mb-4">
+                        <div class="text-gray-400 text-sm">Current Multiplier</div>
+                        <div id="currentMulti" class="text-4xl font-bold text-purple-400">1.00x</div>
+                        <div class="text-xs text-gray-500 mt-1">Applies to ALL earnings</div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-green-900/50 to-emerald-900/50 border border-green-500/30 rounded-lg p-4 mb-4">
+                        <div class="text-green-300 text-sm font-medium">✨ Prestige Now For</div>
+                        <div id="prestigeGain" class="text-3xl font-bold text-green-400">+0.00x</div>
+                        <div class="text-xs text-gray-400 mt-1">
+                            Total after: <span id="totalAfterPrestige" class="text-purple-300">1.00x</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-700/50 rounded-lg p-3 mb-4 text-left text-xs">
+                        <div class="text-gray-400 mb-1">📋 What you keep:</div>
+                        <div class="text-green-400">✓ Prestige multiplier (permanent!)</div>
+                        <div class="text-green-400">✓ Achievements & statistics</div>
+                        <div class="text-green-400">✓ Unlocked discount codes!</div>
+                        <div class="text-gray-400 mb-1 mt-2">❌ What resets:</div>
+                        <div class="text-red-400">✗ Money, depth, all upgrades</div>
+                    </div>
+                    
+                    <div class="text-xs text-gray-500 mb-3">
+                        Requirement: <span id="prestigeReq" class="text-yellow-400">10,000 ft depth</span>
+                    </div>
+                    
+                    <button id="prestigeBtn" class="w-full py-4 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 font-bold text-lg disabled:opacity-40 disabled:cursor-not-allowed hover:from-purple-500 hover:to-pink-500 transition-all transform hover:scale-[1.02] active:scale-[0.98]">
+                        🚀 Start New Job Site
+                    </button>
+                </div>
+            </div>
+
+            <!-- Achievements Tab -->
+            <div id="achievementsTab" class="tab-panel p-4 hidden">
+                <h3 class="text-xl font-bold text-yellow-400 mb-3 flex items-center gap-2">
+                    🏆 Achievements <span id="achievementCount" class="text-sm text-gray-400 font-normal">(0/20)</span>
+                </h3>
+                <div id="achievementsList" class="space-y-2"></div>
+            </div>
+
+            <!-- Stats Tab -->
+            <div id="statsTab" class="tab-panel p-4 hidden">
+                <h3 class="text-xl font-bold text-gray-300 mb-3">📊 Lifetime Statistics</h3>
+                
+                <!-- Mini Chart -->
+                <div class="bg-gray-700 rounded-lg p-3 mb-4">
+                    <div class="text-xs text-gray-400 mb-2">Depth Progress (Last 10 sessions)</div>
+                    <div id="depthChart" class="flex items-end justify-between h-16 gap-1">
+                        <!-- Chart bars will be inserted here -->
+                    </div>
+                </div>
+                
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between bg-gray-700 rounded p-2">
+                        <span class="text-gray-400">📏 Total Depth Drilled</span>
+                        <span id="statTotalDepth" class="text-blue-400 font-bold">0 ft</span>
+                    </div>
+                    <div class="flex justify-between bg-gray-700 rounded p-2">
+                        <span class="text-gray-400">💰 Total Money Earned</span>
+                        <span id="statTotalMoney" class="text-green-400 font-bold">$0</span>
+                    </div>
+                    <div class="flex justify-between bg-gray-700 rounded p-2">
+                        <span class="text-gray-400">👆 Total Clicks</span>
+                        <span id="statClicks" class="text-yellow-400 font-bold">0</span>
+                    </div>
+                    <div class="flex justify-between bg-gray-700 rounded p-2">
+                        <span class="text-gray-400">🌟 Prestige Count</span>
+                        <span id="statPrestige" class="text-purple-400 font-bold">0</span>
+                    </div>
+                    <div class="flex justify-between bg-gray-700 rounded p-2">
+                        <span class="text-gray-400">🔩 Upgrades Bought</span>
+                        <span id="statUpgrades" class="text-orange-400 font-bold">0</span>
+                    </div>
+                    <div class="flex justify-between bg-gray-700 rounded p-2">
+                        <span class="text-gray-400">🏆 Achievements</span>
+                        <span id="statAchievements" class="text-yellow-400 font-bold">0</span>
+                    </div>
+                    <div class="flex justify-between bg-gray-700 rounded p-2">
+                        <span class="text-gray-400">⏱️ Play Time</span>
+                        <span id="statTime" class="text-gray-300 font-bold">0:00:00</span>
+                    </div>
+                    <div class="flex justify-between bg-gray-700 rounded p-2">
+                        <span class="text-gray-400">📅 First Played</span>
+                        <span id="statFirstPlayed" class="text-gray-300 font-bold">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== DMI TOOLS PRODUCT CATALOG ==========
+        const dmiProducts = {
+            coreDrillBits: {
+                name: "Core Drill Bits",
+                icon: "💎",
+                products: [
+                    { 
+                        id: "wet-core-bit-2in", 
+                        name: "2\" Wet Core Drill Bit", 
+                        price: 89, 
+                        description: "Professional diamond wet core bit for concrete and masonry. 2\" diameter.",
+                        upgradeLink: "standard",
+                        url: "https://dmitools.com/collections/core-drill-bits/products/wet-core-bit-2"
+                    },
+                    { 
+                        id: "wet-core-bit-4in", 
+                        name: "4\" Wet Core Drill Bit", 
+                        price: 149, 
+                        description: "Heavy-duty diamond wet core bit. Perfect for plumbing and electrical.",
+                        upgradeLink: "coredry",
+                        url: "https://dmitools.com/collections/core-drill-bits/products/wet-core-bit-4"
+                    },
+                    { 
+                        id: "dry-core-bit-3in", 
+                        name: "3\" Dry Core Drill Bit", 
+                        price: 129, 
+                        description: "Diamond dry core bit - no water needed. Fast, clean cuts.",
+                        upgradeLink: "coredry",
+                        url: "https://dmitools.com/collections/core-drill-bits/products/dry-core-bit-3"
+                    },
+                    { 
+                        id: "wet-core-bit-6in", 
+                        name: "6\" Wet Core Drill Bit", 
+                        price: 249, 
+                        description: "Large diameter professional core bit for HVAC and large conduit.",
+                        upgradeLink: "turbo",
+                        url: "https://dmitools.com/collections/core-drill-bits/products/wet-core-bit-6"
+                    },
+                    { 
+                        id: "premium-pdc-bit", 
+                        name: "Premium PDC Core Bit", 
+                        price: 399, 
+                        description: "Polycrystalline Diamond Compact - the ultimate cutting performance.",
+                        upgradeLink: "premium",
+                        url: "https://dmitools.com/collections/core-drill-bits/products/premium-pdc"
+                    }
+                ]
+            },
+            coreDrillMotors: {
+                name: "Core Drill Motors",
+                icon: "⚙️",
+                products: [
+                    { 
+                        id: "handheld-motor-15a", 
+                        name: "15A Handheld Core Drill", 
+                        price: 599, 
+                        description: "Powerful handheld core drill motor. Up to 4\" capacity.",
+                        upgradeLink: "cordless",
+                        url: "https://dmitools.com/collections/core-drill-motors/products/handheld-15a"
+                    },
+                    { 
+                        id: "handheld-motor-20a", 
+                        name: "20A Heavy Duty Core Drill", 
+                        price: 899, 
+                        description: "Professional grade. 6\" capacity. Variable speed control.",
+                        upgradeLink: "corded",
+                        url: "https://dmitools.com/collections/core-drill-motors/products/handheld-20a"
+                    },
+                    { 
+                        id: "rig-mounted-motor", 
+                        name: "Rig-Mounted Core Motor", 
+                        price: 1499, 
+                        description: "High-torque motor designed for drill stands. Up to 12\" capacity.",
+                        upgradeLink: "rotary",
+                        url: "https://dmitools.com/collections/core-drill-motors/products/rig-mounted"
+                    },
+                    { 
+                        id: "hydraulic-motor", 
+                        name: "Hydraulic Core Drill Motor", 
+                        price: 3999, 
+                        description: "Industrial hydraulic motor for the most demanding applications.",
+                        upgradeLink: "demolition",
+                        url: "https://dmitools.com/collections/core-drill-motors/products/hydraulic"
+                    }
+                ]
+            },
+            drillStands: {
+                name: "Drill Stands & Rigs",
+                icon: "🪜",
+                products: [
+                    { 
+                        id: "compact-stand", 
+                        name: "Compact Drill Stand", 
+                        price: 349, 
+                        description: "Portable aluminum stand. Quick setup, precise drilling.",
+                        upgradeLink: "stand",
+                        url: "https://dmitools.com/collections/drill-stands/products/compact-stand"
+                    },
+                    { 
+                        id: "pro-stand", 
+                        name: "Pro Drill Stand", 
+                        price: 649, 
+                        description: "Heavy-duty steel stand with angle adjustment. Up to 8\" bits.",
+                        upgradeLink: "stand",
+                        url: "https://dmitools.com/collections/drill-stands/products/pro-stand"
+                    },
+                    { 
+                        id: "complete-rig", 
+                        name: "Complete Drilling Rig", 
+                        price: 2499, 
+                        description: "Full rig system with motor, stand, and feed mechanism.",
+                        upgradeLink: "autoFeed",
+                        url: "https://dmitools.com/collections/drill-stands/products/complete-rig"
+                    }
+                ]
+            },
+            accessories: {
+                name: "Accessories",
+                icon: "🔧",
+                products: [
+                    { 
+                        id: "slurry-ring", 
+                        name: "Slurry Containment Ring", 
+                        price: 49, 
+                        description: "Keeps water and slurry contained during wet drilling.",
+                        upgradeLink: "coolant",
+                        url: "https://dmitools.com/collections/accessories/products/slurry-ring"
+                    },
+                    { 
+                        id: "vacuum-system", 
+                        name: "Dust Vacuum System", 
+                        price: 299, 
+                        description: "HEPA vacuum for dry core drilling. Keeps job site clean.",
+                        upgradeLink: "vacuum",
+                        url: "https://dmitools.com/collections/accessories/products/vacuum-system"
+                    },
+                    { 
+                        id: "water-tank", 
+                        name: "Pressurized Water Tank", 
+                        price: 199, 
+                        description: "5-gallon pressurized tank for wet drilling without hose access.",
+                        upgradeLink: "coolant",
+                        url: "https://dmitools.com/collections/accessories/products/water-tank"
+                    },
+                    { 
+                        id: "anchor-kit", 
+                        name: "Vacuum Anchor Kit", 
+                        price: 179, 
+                        description: "Secure your drill stand without drilling anchor holes.",
+                        upgradeLink: "stand",
+                        url: "https://dmitools.com/collections/accessories/products/anchor-kit"
+                    },
+                    { 
+                        id: "extension-set", 
+                        name: "Extension Rod Set", 
+                        price: 149, 
+                        description: "Extend your drilling depth up to 24\" with these quality extensions.",
+                        upgradeLink: "turbo",
+                        url: "https://dmitools.com/collections/accessories/products/extension-set"
+                    }
+                ]
+            }
+        };
+
+        // Map upgrade IDs to product recommendations
+        const upgradeToProductMap = {
+            // Drill Bits
+            standard: ["wet-core-bit-2in"],
+            coredry: ["dry-core-bit-3in", "wet-core-bit-4in"],
+            turbo: ["wet-core-bit-6in", "extension-set"],
+            premium: ["premium-pdc-bit"],
+            quantum: ["premium-pdc-bit", "hydraulic-motor"],
+            // Motors
+            cordless: ["handheld-motor-15a"],
+            corded: ["handheld-motor-20a"],
+            rotary: ["rig-mounted-motor"],
+            demolition: ["hydraulic-motor"],
+            industrial: ["hydraulic-motor", "complete-rig"],
+            // Accessories
+            stand: ["compact-stand", "pro-stand", "anchor-kit"],
+            vacuum: ["vacuum-system"],
+            coolant: ["slurry-ring", "water-tank"],
+            autoFeed: ["complete-rig"],
+            aiCore: ["complete-rig", "hydraulic-motor"]
+        };
+
+        // Find product by ID
+        function findProductById(productId) {
+            for (const category of Object.values(dmiProducts)) {
+                const product = category.products.find(p => p.id === productId);
+                if (product) return { ...product, category: category.name };
+            }
+            return null;
+        }
+
+        // ========== AUDIO SYSTEM (Web Audio API) ==========
+        const AudioSystem = {
+            ctx: null,
+            sfxEnabled: true,
+            musicEnabled: false,
+            musicOsc: null,
+            musicGain: null,
+            
+            init() {
+                try {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch(e) {
+                    console.warn('Web Audio not supported');
+                }
+            },
+            
+            resume() {
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            },
+            
+            // Click sound - short satisfying "tick"
+            playClick() {
+                if (!this.sfxEnabled || !this.ctx) return;
+                this.resume();
+                
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                
+                osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.1);
+                
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+                
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.1);
+            },
+            
+            // Purchase sound - rewarding "cha-ching"
+            playPurchase() {
+                if (!this.sfxEnabled || !this.ctx) return;
+                this.resume();
+                
+                // First note
+                const osc1 = this.ctx.createOscillator();
+                const gain1 = this.ctx.createGain();
+                osc1.connect(gain1);
+                gain1.connect(this.ctx.destination);
+                osc1.frequency.setValueAtTime(523, this.ctx.currentTime); // C5
+                gain1.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain1.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+                osc1.start();
+                osc1.stop(this.ctx.currentTime + 0.15);
+                
+                // Second note (higher)
+                setTimeout(() => {
+                    const osc2 = this.ctx.createOscillator();
+                    const gain2 = this.ctx.createGain();
+                    osc2.connect(gain2);
+                    gain2.connect(this.ctx.destination);
+                    osc2.frequency.setValueAtTime(659, this.ctx.currentTime); // E5
+                    gain2.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                    gain2.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+                    osc2.start();
+                    osc2.stop(this.ctx.currentTime + 0.2);
+                }, 80);
+            },
+            
+            // Achievement sound - triumphant fanfare
+            playAchievement() {
+                if (!this.sfxEnabled || !this.ctx) return;
+                this.resume();
+                
+                const notes = [523, 659, 784, 1047]; // C5, E5, G5, C6
+                notes.forEach((freq, i) => {
+                    setTimeout(() => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+                        osc.start();
+                        osc.stop(this.ctx.currentTime + 0.3);
+                    }, i * 100);
+                });
+            },
+            
+            // Prestige sound - epic whoosh
+            playPrestige() {
+                if (!this.sfxEnabled || !this.ctx) return;
+                this.resume();
+                
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                
+                osc.frequency.setValueAtTime(100, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(2000, this.ctx.currentTime + 0.5);
+                osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 1);
+                
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.4, this.ctx.currentTime + 0.3);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 1);
+                
+                osc.start();
+                osc.stop(this.ctx.currentTime + 1);
+                
+                // Add sparkle
+                setTimeout(() => this.playAchievement(), 500);
+            },
+            
+            // Milestone sound - level up chime
+            playMilestone() {
+                if (!this.sfxEnabled || !this.ctx) return;
+                this.resume();
+                
+                const notes = [392, 523, 659, 784]; // G4, C5, E5, G5
+                notes.forEach((freq, i) => {
+                    setTimeout(() => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sine';
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+                        osc.start();
+                        osc.stop(this.ctx.currentTime + 0.4);
+                    }, i * 80);
+                });
+            },
+            
+            // Background music - simple ambient loop
+            startMusic() {
+                if (!this.ctx) return;
+                this.resume();
+                this.musicEnabled = true;
+                
+                // Create a simple ambient drone
+                this.musicGain = this.ctx.createGain();
+                this.musicGain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+                this.musicGain.connect(this.ctx.destination);
+                
+                // Bass drone
+                this.musicOsc = this.ctx.createOscillator();
+                this.musicOsc.type = 'sine';
+                this.musicOsc.frequency.setValueAtTime(55, this.ctx.currentTime); // A1
+                this.musicOsc.connect(this.musicGain);
+                this.musicOsc.start();
+                
+                // Modulate slightly for movement
+                const lfo = this.ctx.createOscillator();
+                const lfoGain = this.ctx.createGain();
+                lfo.frequency.setValueAtTime(0.1, this.ctx.currentTime);
+                lfoGain.gain.setValueAtTime(2, this.ctx.currentTime);
+                lfo.connect(lfoGain);
+                lfoGain.connect(this.musicOsc.frequency);
+                lfo.start();
+            },
+            
+            stopMusic() {
+                this.musicEnabled = false;
+                if (this.musicOsc) {
+                    this.musicOsc.stop();
+                    this.musicOsc = null;
+                }
+            },
+            
+            toggleSfx() {
+                this.sfxEnabled = !this.sfxEnabled;
+                return this.sfxEnabled;
+            },
+            
+            toggleMusic() {
+                if (this.musicEnabled) {
+                    this.stopMusic();
+                } else {
+                    this.startMusic();
+                }
+                return this.musicEnabled;
+            }
+        };
+
+        // ========== GAME STATE ==========
+        const game = {
+            money: 0,
+            depth: 0,
+            dps: 0,
+            
+            // Prestige
+            prestigeMultiplier: 1,
+            prestigeCount: 0,
+            
+            // Stats
+            totalDepth: 0,
+            totalMoney: 0,
+            totalClicks: 0,
+            totalUpgrades: 0,
+            startTime: Date.now(),
+            firstPlayed: Date.now(),
+            lastSave: Date.now(),
+            sessionDepths: [],
+            
+            // Settings
+            sfxEnabled: true,
+            musicEnabled: false,
+            scientificNotation: false,
+            notificationsEnabled: false,
+            
+            // Achievements
+            achievements: {},
+            
+            // Milestones tracking
+            lastMilestone: 0,
+            lastLayer: 'Topsoil',
+            
+            // Product toast cooldown tracking
+            lastProductToast: 0,
+            shownProductToasts: [],
+            
+            // Upgrades owned
+            upgrades: {
+                drillBits: { standard: 0, coredry: 0, turbo: 0, premium: 0, quantum: 0 },
+                motors: { cordless: 0, corded: 0, rotary: 0, demolition: 0, industrial: 0 },
+                accessories: { stand: 0, vacuum: 0, coolant: 0, autoFeed: 0, aiCore: 0 }
+            }
+        };
+
+        // ========== DMI TOOLS UPGRADE DEFINITIONS ==========
+        const upgradeDefs = {
+            drillBits: [
+                { 
+                    id: 'standard', 
+                    name: 'DMI Standard Bit', 
+                    emoji: '🔩', 
+                    desc: '+1 depth/click', 
+                    tooltip: 'Entry-level tungsten carbide bit. Perfect for beginners.',
+                    baseCost: 10, 
+                    costMult: 1.15, 
+                    effect: 1 
+                },
+                { 
+                    id: 'coredry', 
+                    name: 'DMI Core-Dry™', 
+                    emoji: '💎', 
+                    desc: '+5 depth/click', 
+                    tooltip: 'Diamond-tipped dry core bit. No water needed, just results.',
+                    baseCost: 100, 
+                    costMult: 1.18, 
+                    effect: 5 
+                },
+                { 
+                    id: 'turbo', 
+                    name: 'DMI TurboMax™', 
+                    emoji: '🌀', 
+                    desc: '+25 depth/click', 
+                    tooltip: 'Spiral-fluted design for rapid debris removal. Drills 5x faster.',
+                    baseCost: 1000, 
+                    costMult: 1.20, 
+                    effect: 25 
+                },
+                { 
+                    id: 'premium', 
+                    name: 'DMI Premium PDC', 
+                    emoji: '⚡', 
+                    desc: '+125 depth/click', 
+                    tooltip: 'Polycrystalline Diamond Compact. Industrial-grade performance.',
+                    baseCost: 15000, 
+                    costMult: 1.22, 
+                    effect: 125 
+                },
+                { 
+                    id: 'quantum', 
+                    name: 'DMI Quantum Edge™', 
+                    emoji: '🌌', 
+                    desc: '+1000 depth/click', 
+                    tooltip: 'Theoretical limit of drilling technology. Cuts through anything.',
+                    baseCost: 500000, 
+                    costMult: 1.25, 
+                    effect: 1000 
+                }
+            ],
+            motors: [
+                { 
+                    id: 'cordless', 
+                    name: 'DMI 20V Cordless', 
+                    emoji: '🔧', 
+                    desc: '+0.5 DPS', 
+                    tooltip: 'Lightweight cordless drill. Perfect for light-duty auto-drilling.',
+                    baseCost: 50, 
+                    costMult: 1.15, 
+                    effect: 0.5 
+                },
+                { 
+                    id: 'corded', 
+                    name: 'DMI Pro Corded', 
+                    emoji: '🔌', 
+                    desc: '+3 DPS', 
+                    tooltip: '10-amp corded drill. Unlimited power, serious torque.',
+                    baseCost: 500, 
+                    costMult: 1.18, 
+                    effect: 3 
+                },
+                { 
+                    id: 'rotary', 
+                    name: 'DMI Rotary Hammer', 
+                    emoji: '🏗️', 
+                    desc: '+15 DPS', 
+                    tooltip: 'SDS-Plus rotary hammer. Eats through concrete like butter.',
+                    baseCost: 5000, 
+                    costMult: 1.20, 
+                    effect: 15 
+                },
+                { 
+                    id: 'demolition', 
+                    name: 'DMI Demo King™', 
+                    emoji: '💪', 
+                    desc: '+100 DPS', 
+                    tooltip: '15-amp demolition hammer. When subtle isn\'t an option.',
+                    baseCost: 100000, 
+                    costMult: 1.22, 
+                    effect: 100 
+                },
+                { 
+                    id: 'industrial', 
+                    name: 'DMI Industrial Rig', 
+                    emoji: '🏭', 
+                    desc: '+1000 DPS', 
+                    tooltip: 'Full hydraulic drilling rig. Basically cheating.',
+                    baseCost: 5000000, 
+                    costMult: 1.25, 
+                    effect: 1000 
+                }
+            ],
+            accessories: [
+                { 
+                    id: 'stand', 
+                    name: 'DMI Drill Stand', 
+                    emoji: '🪜', 
+                    desc: '+10% click damage', 
+                    tooltip: 'Precision drill stand for consistent pressure and accuracy.',
+                    baseCost: 75, 
+                    costMult: 1.20, 
+                    effect: 0.10 
+                },
+                { 
+                    id: 'vacuum', 
+                    name: 'DMI Dust Extractor', 
+                    emoji: '🌪️', 
+                    desc: '+15% DPS', 
+                    tooltip: 'HEPA dust extraction system. Clean drilling = faster drilling.',
+                    baseCost: 750, 
+                    costMult: 1.22, 
+                    effect: 0.15 
+                },
+                { 
+                    id: 'coolant', 
+                    name: 'DMI Coolant Ring', 
+                    emoji: '💧', 
+                    desc: '+25% money/ft', 
+                    tooltip: 'Water-fed coolant ring. Extends bit life, extracts more value.',
+                    baseCost: 7500, 
+                    costMult: 1.25, 
+                    effect: 0.25 
+                },
+                { 
+                    id: 'autoFeed', 
+                    name: 'DMI Auto-Feed Pro', 
+                    emoji: '🤖', 
+                    desc: '+50% all production', 
+                    tooltip: 'Automatic bit feed system. Set it and forget it.',
+                    baseCost: 150000, 
+                    costMult: 1.28, 
+                    effect: 0.50 
+                },
+                { 
+                    id: 'aiCore', 
+                    name: 'DMI AI Control Unit', 
+                    emoji: '🧠', 
+                    desc: '+100% everything', 
+                    tooltip: 'AI-powered drilling optimization. The future is now.',
+                    baseCost: 10000000, 
+                    costMult: 1.30, 
+                    effect: 1.00 
+                }
+            ]
+        };
+
+        // ========== ACHIEVEMENTS ==========
+        const achievementDefs = [
+            { id: 'first_click', name: 'First Dig', desc: 'Click the drill for the first time', icon: '👆', check: () => game.totalClicks >= 1 },
+            { id: 'depth_100', name: 'Getting Started', desc: 'Reach 100 ft depth', icon: '📏', check: () => game.depth >= 100 },
+            { id: 'depth_1000', name: 'Deep Digger', desc: 'Reach 1,000 ft depth', icon: '🕳️', check: () => game.depth >= 1000 },
+            { id: 'depth_10000', name: 'Subterranean', desc: 'Reach 10,000 ft depth', icon: '⬇️', check: () => game.depth >= 10000 },
+            { id: 'depth_100000', name: 'Abyssal', desc: 'Reach 100,000 ft depth', icon: '🌋', check: () => game.depth >= 100000 },
+            { id: 'depth_1000000', name: 'Core Seeker', desc: 'Reach 1,000,000 ft depth', icon: '🌍', check: () => game.depth >= 1000000 },
+            { id: 'money_1000', name: 'First Paycheck', desc: 'Earn $1,000', icon: '💵', check: () => game.totalMoney >= 1000 },
+            { id: 'money_1000000', name: 'Millionaire', desc: 'Earn $1,000,000 total', icon: '💰', check: () => game.totalMoney >= 1000000 },
+            { id: 'money_1000000000', name: 'Billionaire', desc: 'Earn $1,000,000,000 total', icon: '🤑', check: () => game.totalMoney >= 1000000000 },
+            { id: 'clicks_100', name: 'Clicker', desc: 'Click 100 times', icon: '🖱️', check: () => game.totalClicks >= 100 },
+            { id: 'clicks_1000', name: 'Tapper', desc: 'Click 1,000 times', icon: '👊', check: () => game.totalClicks >= 1000 },
+            { id: 'clicks_10000', name: 'Drill Sergeant', desc: 'Click 10,000 times', icon: '🎖️', check: () => game.totalClicks >= 10000 },
+            { id: 'first_prestige', name: 'Fresh Start', desc: 'Prestige for the first time', icon: '🌟', check: () => game.prestigeCount >= 1 },
+            { id: 'prestige_5', name: 'Job Hopper', desc: 'Prestige 5 times', icon: '🔄', check: () => game.prestigeCount >= 5 },
+            { id: 'prestige_10', name: 'Veteran Driller', desc: 'Prestige 10 times', icon: '👴', check: () => game.prestigeCount >= 10 },
+            { id: 'dps_100', name: 'Automated', desc: 'Reach 100 DPS', icon: '⚡', check: () => game.dps >= 100 },
+            { id: 'dps_10000', name: 'Factory', desc: 'Reach 10,000 DPS', icon: '🏭', check: () => game.dps >= 10000 },
+            { id: 'layer_granite', name: 'Rock Solid', desc: 'Reach the Granite layer', icon: '🪨', check: () => game.depth >= 10000 },
+            { id: 'layer_magma', name: 'Playing with Fire', desc: 'Reach the Magma Zone', icon: '🔥', check: () => game.depth >= 250000 },
+            { id: 'layer_core', name: 'Core Breach', desc: 'Reach the Earth Core', icon: '💫', check: () => game.depth >= 1000000 }
+        ];
+
+        // ========== EARTH LAYERS ==========
+        const layers = [
+            { name: 'Topsoil', maxDepth: 100, value: 1, color: '#8B4513' },
+            { name: 'Clay', maxDepth: 500, value: 2, color: '#CD853F' },
+            { name: 'Sandstone', maxDepth: 2000, value: 5, color: '#DEB887' },
+            { name: 'Limestone', maxDepth: 10000, value: 15, color: '#F5DEB3' },
+            { name: 'Granite', maxDepth: 50000, value: 50, color: '#696969' },
+            { name: 'Obsidian', maxDepth: 250000, value: 200, color: '#1a1a2e' },
+            { name: 'Magma Zone', maxDepth: 1000000, value: 1000, color: '#ff4500' },
+            { name: 'Earth Core', maxDepth: Infinity, value: 10000, color: '#ffd700' }
+        ];
+
+        // ========== MILESTONES ==========
+        const milestones = [1000, 5000, 10000, 25000, 50000, 100000, 250000, 500000, 1000000, 5000000, 10000000];
+
+        // ========== CANVAS SETUP ==========
+        const canvas = document.getElementById('drillCanvas');
+        const ctx = canvas.getContext('2d');
+        let drillY = 50;
+        let particles = [];
+        let drillRotation = 0;
+        let screenShake = 0;
+
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+            canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // ========== NUMBER FORMATTING ==========
+        function formatNumber(num, forceSci = false) {
+            if (num === 0) return '0';
+            
+            if (game.scientificNotation || forceSci) {
+                if (num < 1000) return Math.floor(num).toString();
+                const exp = Math.floor(Math.log10(num));
+                const mantissa = num / Math.pow(10, exp);
+                return mantissa.toFixed(2) + 'e' + exp;
+            }
+            
+            if (num < 1000) return Math.floor(num).toLocaleString();
+            if (num < 1000000) return (num / 1000).toFixed(1) + 'K';
+            if (num < 1000000000) return (num / 1000000).toFixed(2) + 'M';
+            if (num < 1000000000000) return (num / 1000000000).toFixed(2) + 'B';
+            if (num < 1000000000000000) return (num / 1000000000000).toFixed(2) + 'T';
+            if (num < 1000000000000000000) return (num / 1000000000000000).toFixed(2) + 'Qa';
+            return (num / 1000000000000000000).toFixed(2) + 'Qi';
+        }
+
+        function formatMoney(num) {
+            return '$' + formatNumber(num);
+        }
+
+        // ========== GAME CALCULATIONS ==========
+        function getCurrentLayer() {
+            for (const layer of layers) {
+                if (game.depth < layer.maxDepth) return layer;
+            }
+            return layers[layers.length - 1];
+        }
+
+        function getNextMilestone() {
+            for (const m of milestones) {
+                if (game.depth < m) return m;
+            }
+            return milestones[milestones.length - 1] * 10;
+        }
+
+        function getDrillTier() {
+            const totalBits = Object.values(game.upgrades.drillBits).reduce((a, b) => a + b, 0);
+            if (totalBits >= 50) return { tier: 5, name: 'Legendary', class: 'drill-tier-5', emoji: '🌌' };
+            if (totalBits >= 25) return { tier: 4, name: 'Epic', class: 'drill-tier-4', emoji: '⚡' };
+            if (totalBits >= 10) return { tier: 3, name: 'Rare', class: 'drill-tier-3', emoji: '💎' };
+            if (totalBits >= 3) return { tier: 2, name: 'Uncommon', class: 'drill-tier-2', emoji: '🔩' };
+            return { tier: 1, name: 'Starter', class: 'drill-tier-1', emoji: '🔩' };
+        }
+
+        function getClickDamage() {
+            let base = 1;
+            const bits = game.upgrades.drillBits;
+            
+            for (const def of upgradeDefs.drillBits) {
+                base += bits[def.id] * def.effect;
+            }
+            
+            // Apply accessory bonuses
+            const acc = game.upgrades.accessories;
+            let multiplier = 1;
+            multiplier += acc.stand * 0.10;
+            multiplier += acc.autoFeed * 0.50;
+            multiplier += acc.aiCore * 1.00;
+            
+            return base * multiplier * game.prestigeMultiplier;
+        }
+
+        function calculateDPS() {
+            let base = 0;
+            const motors = game.upgrades.motors;
+            
+            for (const def of upgradeDefs.motors) {
+                base += motors[def.id] * def.effect;
+            }
+            
+            // Apply accessory bonuses
+            const acc = game.upgrades.accessories;
+            let multiplier = 1;
+            multiplier += acc.vacuum * 0.15;
+            multiplier += acc.autoFeed * 0.50;
+            multiplier += acc.aiCore * 1.00;
+            
+            return base * multiplier * game.prestigeMultiplier;
+        }
+
+        function getMoneyMultiplier() {
+            const acc = game.upgrades.accessories;
+            let multiplier = 1;
+            multiplier += acc.coolant * 0.25;
+            multiplier += acc.autoFeed * 0.50;
+            multiplier += acc.aiCore * 1.00;
+            return multiplier * game.prestigeMultiplier;
+        }
+
+        function getUpgradeCost(category, id) {
+            const defs = upgradeDefs[category];
+            const def = defs.find(d => d.id === id);
+            const owned = game.upgrades[category][id];
+            return Math.floor(def.baseCost * Math.pow(def.costMult, owned));
+        }
+
+        function getPrestigeGain() {
+            if (game.depth < 10000) return 0;
+            return Math.sqrt(game.depth / 10000) * 0.1;
+        }
+
+        // ========== PRODUCT TOAST SYSTEM ==========
+        function showProductToast(upgradeId) {
+            const now = Date.now();
+            
+            // Don't show toasts too frequently (minimum 10 seconds between)
+            if (now - game.lastProductToast < 10000) return;
+            
+            // Get related products for this upgrade
+            const productIds = upgradeToProductMap[upgradeId];
+            if (!productIds || productIds.length === 0) return;
+            
+            // Find a product we haven't shown recently
+            let product = null;
+            for (const pid of productIds) {
+                if (!game.shownProductToasts.includes(pid)) {
+                    product = findProductById(pid);
+                    if (product) break;
+                }
+            }
+            
+            // If all products shown, reset and pick first
+            if (!product) {
+                game.shownProductToasts = [];
+                product = findProductById(productIds[0]);
+            }
+            
+            if (!product) return;
+            
+            game.lastProductToast = now;
+            game.shownProductToasts.push(product.id);
+            
+            // Create toast element
+            const container = document.getElementById('productToastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'product-toast bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-3 shadow-xl border border-yellow-500/30 flex items-center gap-3 max-w-sm mx-auto';
+            toast.innerHTML = `
+                <div class="text-3xl">🛒</div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-xs text-yellow-400 font-medium">Real Gear Upgrade?</div>
+                    <div class="text-sm font-bold text-white truncate">${product.name}</div>
+                    <div class="text-xs text-green-400">$${product.price}</div>
+                </div>
+                <a href="${product.url}" target="_blank" rel="noopener" 
+                   class="bg-yellow-500 hover:bg-yellow-400 text-black font-bold text-xs px-3 py-2 rounded transition-colors whitespace-nowrap">
+                    View →
+                </a>
+            `;
+            
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        }
+
+        // ========== DRILLING ==========
+        function drill(amount) {
+            const layer = getCurrentLayer();
+            const prevLayer = game.lastLayer;
+            const moneyEarned = amount * layer.value * getMoneyMultiplier();
+            
+            game.depth += amount;
+            game.money += moneyEarned;
+            game.totalDepth += amount;
+            game.totalMoney += moneyEarned;
+            
+            // Check for layer change
+            if (layer.name !== prevLayer) {
+                game.lastLayer = layer.name;
+                celebrateMilestone(`🗺️ NEW LAYER: ${layer.name}!`, 'layer');
+            }
+            
+            // Check for milestones
+            const nextMilestone = getNextMilestone();
+            const prevMilestone = milestones[milestones.indexOf(nextMilestone) - 1] || 0;
+            if (game.depth >= nextMilestone && game.lastMilestone < nextMilestone) {
+                game.lastMilestone = nextMilestone;
+                celebrateMilestone(`🎯 ${formatNumber(nextMilestone)} FT!`, 'depth');
+            }
+            
+            return moneyEarned;
+        }
+
+        function handleClick(e) {
+            e.preventDefault();
+            AudioSystem.playClick();
+            
+            const damage = getClickDamage();
+            const earned = drill(damage);
+            game.totalClicks++;
+            
+            // Visual feedback
+            const btn = document.getElementById('drillBtn');
+            btn.classList.add('shake');
+            setTimeout(() => btn.classList.remove('shake'), 100);
+            
+            // Floating number
+            const isCrit = Math.random() < 0.05; // 5% crit chance
+            showFloatingNumber(earned, e, isCrit);
+            
+            // Particles
+            createParticles(isCrit ? 15 : 5);
+            
+            // Drill animation
+            drillY += 5;
+            screenShake = isCrit ? 8 : 3;
+            
+            // Check achievements
+            checkAchievements();
+            
+            updateUI();
+        }
+
+        function showFloatingNumber(amount, e, isCrit = false) {
+            const container = document.getElementById('floatingNumbers');
+            const el = document.createElement('div');
+            
+            if (isCrit) {
+                el.className = 'float-crit absolute font-black text-3xl';
+                el.innerHTML = `<span class="text-yellow-300">💥 CRIT!</span><br><span class="text-green-300">+${formatMoney(amount * 2)}</span>`;
+            } else {
+                el.className = 'float-up absolute font-bold text-xl';
+                el.style.color = `hsl(${100 + Math.random() * 40}, 70%, 60%)`;
+                el.textContent = '+' + formatMoney(amount);
+            }
+            
+            // Random position near click
+            const rect = container.getBoundingClientRect();
+            const x = (e?.clientX || rect.width / 2 + rect.left) - rect.left + (Math.random() - 0.5) * 60;
+            const y = (e?.clientY || rect.height / 2 + rect.top) - rect.top - 20;
+            
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            
+            container.appendChild(el);
+            setTimeout(() => el.remove(), isCrit ? 1500 : 1200);
+        }
+
+        // ========== CELEBRATIONS ==========
+        function celebrateMilestone(text, type) {
+            AudioSystem.playMilestone();
+            
+            const overlay = document.getElementById('milestoneOverlay');
+            const textEl = document.getElementById('milestoneText');
+            
+            textEl.textContent = text;
+            textEl.className = type === 'layer' ? 'text-4xl font-bold text-blue-400 text-center milestone-burst' : 'text-4xl font-bold text-yellow-400 text-center milestone-burst';
+            overlay.classList.remove('hidden');
+            
+            // Create sparkles
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => createSparkle(overlay), i * 50);
+            }
+            
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 2000);
+            
+            // Vibrate
+            if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
+        }
+
+        function createSparkle(container) {
+            const sparkle = document.createElement('div');
+            sparkle.className = 'sparkle';
+            sparkle.textContent = ['✨', '⭐', '💫', '🌟'][Math.floor(Math.random() * 4)];
+            sparkle.style.left = Math.random() * 100 + '%';
+            sparkle.style.top = Math.random() * 100 + '%';
+            sparkle.style.fontSize = (Math.random() * 20 + 20) + 'px';
+            container.appendChild(sparkle);
+            setTimeout(() => sparkle.remove(), 1000);
+        }
+
+        // ========== ACHIEVEMENTS ==========
+        function checkAchievements() {
+            for (const ach of achievementDefs) {
+                if (!game.achievements[ach.id] && ach.check()) {
+                    unlockAchievement(ach);
+                }
+            }
+        }
+
+        function unlockAchievement(ach) {
+            game.achievements[ach.id] = Date.now();
+            AudioSystem.playAchievement();
+            
+            // Show notification
+            const container = document.getElementById('achievementContainer');
+            const notif = document.createElement('div');
+            notif.className = 'achievement-popup bg-gradient-to-r from-yellow-600 to-amber-600 rounded-lg p-3 shadow-xl border border-yellow-400/50 flex items-center gap-3 min-w-[200px]';
+            notif.innerHTML = `
+                <div class="text-3xl">${ach.icon}</div>
+                <div>
+                    <div class="text-xs text-yellow-200">Achievement Unlocked!</div>
+                    <div class="font-bold text-white">${ach.name}</div>
+                    <div class="text-xs text-yellow-100/80">${ach.desc}</div>
+                </div>
+            `;
+            container.appendChild(notif);
+            setTimeout(() => notif.remove(), 4000);
+            
+            // Vibrate
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 100]);
+        }
+
+        function renderAchievements() {
+            const list = document.getElementById('achievementsList');
+            list.innerHTML = '';
+            
+            let unlocked = 0;
+            for (const ach of achievementDefs) {
+                const isUnlocked = !!game.achievements[ach.id];
+                if (isUnlocked) unlocked++;
+                
+                const card = document.createElement('div');
+                card.className = `flex items-center gap-3 p-3 rounded-lg ${isUnlocked ? 'bg-yellow-900/30 border border-yellow-500/30' : 'bg-gray-700/50 opacity-60'}`;
+                card.innerHTML = `
+                    <div class="text-3xl ${isUnlocked ? '' : 'grayscale'}">${ach.icon}</div>
+                    <div class="flex-1">
+                        <div class="font-medium ${isUnlocked ? 'text-yellow-300' : 'text-gray-400'}">${ach.name}</div>
+                        <div class="text-xs text-gray-400">${ach.desc}</div>
+                    </div>
+                    ${isUnlocked ? '<div class="text-green-400">✓</div>' : '<div class="text-gray-500">🔒</div>'}
+                `;
+                list.appendChild(card);
+            }
+            
+            document.getElementById('achievementCount').textContent = `(${unlocked}/${achievementDefs.length})`;
+            document.getElementById('statAchievements').textContent = unlocked;
+        }
+
+        // ========== PARTICLES ==========
+        function createParticles(count) {
+            const centerX = canvas.offsetWidth / 2;
+            const centerY = canvas.offsetHeight / 2 + drillY;
+            const layer = getCurrentLayer();
+            
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: centerX + (Math.random() - 0.5) * 30,
+                    y: centerY + (Math.random() - 0.5) * 20,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: -Math.random() * 6 - 3,
+                    size: Math.random() * 5 + 2,
+                    color: layer.color,
+                    life: 1
+                });
+            }
+        }
+
+        // ========== RENDERING ==========
+        function render() {
+            const w = canvas.offsetWidth;
+            const h = canvas.offsetHeight;
+            
+            // Apply screen shake
+            ctx.save();
+            if (screenShake > 0) {
+                ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
+                screenShake *= 0.9;
+                if (screenShake < 0.5) screenShake = 0;
+            }
+            
+            ctx.clearRect(-10, -10, w + 20, h + 20);
+            
+            // Draw layers
+            const layer = getCurrentLayer();
+            const layerIdx = layers.indexOf(layer);
+            
+            // Background gradient based on current layer
+            const gradient = ctx.createLinearGradient(0, 0, 0, h);
+            gradient.addColorStop(0, layers[Math.max(0, layerIdx - 1)]?.color || layer.color);
+            gradient.addColorStop(1, layer.color);
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, w, h);
+            
+            // Draw depth lines
+            ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 10; i++) {
+                const y = (h / 10) * i + ((game.depth * 0.1) % (h / 10));
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(w, y);
+                ctx.stroke();
+            }
+            
+            // Draw drill
+            const drillX = w / 2;
+            const drillBaseY = h / 2 - 60 + Math.sin(drillY * 0.1) * 3;
+            
+            drillRotation += game.dps > 0 ? 0.3 : 0.08;
+            
+            const tier = getDrillTier();
+            
+            ctx.save();
+            ctx.translate(drillX, drillBaseY);
+            
+            // Drill body (changes with tier)
+            const bodyColors = ['#666', '#4a90d9', '#9b59b6', '#f39c12', '#e74c3c'];
+            ctx.fillStyle = bodyColors[tier.tier - 1];
+            ctx.fillRect(-10, 0, 20, 65);
+            
+            // Drill collar
+            ctx.fillStyle = '#888';
+            ctx.fillRect(-14, 0, 28, 10);
+            
+            // Drill bit (rotating)
+            ctx.save();
+            ctx.translate(0, 70);
+            ctx.rotate(drillRotation);
+            
+            // Bit color based on tier
+            const bitColors = ['#ffd700', '#00d4ff', '#ff00ff', '#ff8c00', '#ff0000'];
+            ctx.fillStyle = bitColors[tier.tier - 1];
+            
+            // Bigger/fancier bit at higher tiers
+            const bitSize = 30 + tier.tier * 5;
+            ctx.beginPath();
+            ctx.moveTo(0, bitSize);
+            ctx.lineTo(-15 - tier.tier * 2, 0);
+            ctx.lineTo(15 + tier.tier * 2, 0);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Spiral lines
+            ctx.strokeStyle = tier.tier >= 3 ? '#fff' : '#b8860b';
+            ctx.lineWidth = 2 + tier.tier * 0.5;
+            for (let i = 0; i < 3 + tier.tier; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, 5);
+                ctx.quadraticCurveTo((i - 1 - tier.tier / 2) * 6, 15, 0, bitSize - 5);
+                ctx.stroke();
+            }
+            
+            // Glow effect at higher tiers
+            if (tier.tier >= 3) {
+                ctx.shadowColor = bitColors[tier.tier - 1];
+                ctx.shadowBlur = tier.tier * 5;
+            }
+            
+            ctx.restore();
+            ctx.restore();
+            
+            // Draw particles
+            particles = particles.filter(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.25;
+                p.life -= 0.025;
+                
+                if (p.life > 0) {
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.life;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                    return true;
+                }
+                return false;
+            });
+            
+            ctx.restore();
+            
+            requestAnimationFrame(render);
+        }
+
+        // ========== UPGRADES UI ==========
+        function renderUpgrades() {
+            for (const category of ['drillBits', 'motors', 'accessories']) {
+                const container = document.getElementById(category);
+                container.innerHTML = '';
+                
+                for (const def of upgradeDefs[category]) {
+                    const owned = game.upgrades[category][def.id];
+                    const cost = getUpgradeCost(category, def.id);
+                    const canAfford = game.money >= cost;
+                    
+                    const card = document.createElement('button');
+                    card.className = `upgrade-card has-tooltip relative w-full flex items-center gap-3 p-2 rounded-lg ${canAfford ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-800 opacity-60'} transition-all`;
+                    card.disabled = !canAfford;
+                    
+                    card.innerHTML = `
+                        <div class="text-2xl">${def.emoji}</div>
+                        <div class="flex-1 text-left">
+                            <div class="font-medium text-sm">${def.name} <span class="text-gray-400 text-xs">(${owned})</span></div>
+                            <div class="text-xs text-gray-400">${def.desc}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-bold ${canAfford ? 'text-green-400' : 'text-red-400'}">${formatMoney(cost)}</div>
+                        </div>
+                        <div class="tooltip absolute left-0 bottom-full mb-2 w-full bg-gray-900 border border-gray-600 rounded-lg p-2 text-xs z-10 shadow-xl">
+                            <div class="text-yellow-300 font-medium mb-1">${def.name}</div>
+                            <div class="text-gray-300">${def.tooltip}</div>
+                        </div>
+                    `;
+                    
+                    card.onclick = () => buyUpgrade(category, def.id);
+                    container.appendChild(card);
+                }
+            }
+        }
+
+        function buyUpgrade(category, id) {
+            const cost = getUpgradeCost(category, id);
+            if (game.money >= cost) {
+                game.money -= cost;
+                game.upgrades[category][id]++;
+                game.totalUpgrades++;
+                game.dps = calculateDPS();
+                AudioSystem.playPurchase();
+                
+                // Show product toast on milestone purchases (1st, 5th, 10th of each type)
+                const owned = game.upgrades[category][id];
+                if (owned === 1 || owned === 5 || owned === 10) {
+                    showProductToast(id);
+                }
+                
+                updateUI();
+                renderUpgrades();
+                checkAchievements();
+                
+                // Update drill tier visual
+                updateDrillButton();
+                
+                // Success feedback
+                if (navigator.vibrate) navigator.vibrate(30);
+            }
+        }
+
+        function buyMax(category) {
+            let bought = 0;
+            let lastBoughtId = null;
+            
+            for (const def of upgradeDefs[category]) {
+                while (game.money >= getUpgradeCost(category, def.id)) {
+                    const cost = getUpgradeCost(category, def.id);
+                    game.money -= cost;
+                    game.upgrades[category][def.id]++;
+                    game.totalUpgrades++;
+                    bought++;
+                    lastBoughtId = def.id;
+                }
+            }
+            
+            if (bought > 0) {
+                game.dps = calculateDPS();
+                AudioSystem.playPurchase();
+                
+                // Show product toast for the last item bought
+                if (lastBoughtId && Math.random() < 0.3) {
+                    showProductToast(lastBoughtId);
+                }
+                
+                updateUI();
+                renderUpgrades();
+                checkAchievements();
+                updateDrillButton();
+                if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
+            }
+        }
+
+        function updateDrillButton() {
+            const tier = getDrillTier();
+            const btn = document.getElementById('drillBtn');
+            btn.className = `drill-btn absolute bottom-4 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 shadow-lg flex items-center justify-center text-5xl pulse-glow active:shadow-inner border-4 border-yellow-300 ${tier.class}`;
+            btn.textContent = tier.emoji;
+            document.getElementById('drillTier').textContent = tier.name;
+        }
+
+        // ========== DMI SHOP ==========
+        function renderShop() {
+            const container = document.getElementById('shopProducts');
+            container.innerHTML = '';
+            
+            // Show/hide discount banner based on prestige count
+            const discountBanner = document.getElementById('discountBanner');
+            if (game.prestigeCount >= 1) {
+                discountBanner.classList.remove('hidden');
+            } else {
+                discountBanner.classList.add('hidden');
+            }
+            
+            // Get unlocked upgrade IDs
+            const unlockedUpgrades = new Set();
+            for (const category of Object.keys(game.upgrades)) {
+                for (const [id, count] of Object.entries(game.upgrades[category])) {
+                    if (count > 0) unlockedUpgrades.add(id);
+                }
+            }
+            
+            // Render each product category
+            for (const [categoryKey, category] of Object.entries(dmiProducts)) {
+                const section = document.createElement('div');
+                section.className = 'mb-4';
+                section.innerHTML = `
+                    <h4 class="text-sm font-bold text-gray-300 mb-2 flex items-center gap-2">
+                        <span>${category.icon}</span> ${category.name}
+                    </h4>
+                    <div class="space-y-2" id="shop-${categoryKey}"></div>
+                `;
+                container.appendChild(section);
+                
+                const productContainer = section.querySelector(`#shop-${categoryKey}`);
+                
+                for (const product of category.products) {
+                    const isUnlocked = product.upgradeLink && unlockedUpgrades.has(product.upgradeLink);
+                    
+                    const card = document.createElement('a');
+                    card.href = product.url;
+                    card.target = '_blank';
+                    card.rel = 'noopener';
+                    card.className = `product-card block bg-gray-700 rounded-lg p-3 hover:bg-gray-600 transition-all ${isUnlocked ? 'border border-green-500/50' : ''}`;
+                    card.innerHTML = `
+                        <div class="flex items-start gap-3">
+                            <div class="flex-1">
+                                <div class="font-medium text-sm text-white flex items-center gap-2">
+                                    ${product.name}
+                                    ${isUnlocked ? '<span class="unlocked-badge text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">✓ In Game!</span>' : ''}
+                                </div>
+                                <div class="text-xs text-gray-400 mt-1">${product.description}</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-green-400 font-bold">$${product.price}</div>
+                                <div class="text-xs text-gray-500">View →</div>
+                            </div>
+                        </div>
+                    `;
+                    productContainer.appendChild(card);
+                }
+            }
+        }
+
+        // ========== PRESTIGE ==========
+        function prestige() {
+            const gain = getPrestigeGain();
+            if (gain <= 0) return;
+            
+            AudioSystem.playPrestige();
+            
+            // Show prestige animation
+            const overlay = document.getElementById('prestigeOverlay');
+            document.getElementById('prestigeGainText').textContent = `+${gain.toFixed(2)}x Multiplier`;
+            overlay.classList.remove('hidden');
+            
+            // Create lots of sparkles
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => createSparkle(overlay), i * 40);
+            }
+            
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 3000);
+            
+            // Check if this is first prestige (show discount code notification)
+            const isFirstPrestige = game.prestigeCount === 0;
+            
+            // Apply prestige
+            game.prestigeMultiplier += gain;
+            game.prestigeCount++;
+            
+            // Save session depth for chart
+            if (game.sessionDepths.length >= 10) {
+                game.sessionDepths.shift();
+            }
+            game.sessionDepths.push(game.depth);
+            
+            // Reset progress
+            game.money = 0;
+            game.depth = 0;
+            game.dps = 0;
+            game.lastMilestone = 0;
+            game.lastLayer = 'Topsoil';
+            game.upgrades = {
+                drillBits: { standard: 0, coredry: 0, turbo: 0, premium: 0, quantum: 0 },
+                motors: { cordless: 0, corded: 0, rotary: 0, demolition: 0, industrial: 0 },
+                accessories: { stand: 0, vacuum: 0, coolant: 0, autoFeed: 0, aiCore: 0 }
+            };
+            
+            // Show discount code notification after first prestige
+            if (isFirstPrestige) {
+                setTimeout(() => {
+                    const container = document.getElementById('achievementContainer');
+                    const notif = document.createElement('div');
+                    notif.className = 'achievement-popup bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg p-3 shadow-xl border border-green-400/50 flex items-center gap-3 min-w-[220px]';
+                    notif.innerHTML = `
+                        <div class="text-3xl">🎁</div>
+                        <div>
+                            <div class="text-xs text-green-200">Discount Unlocked!</div>
+                            <div class="font-bold text-white">DRILLMASTER10</div>
+                            <div class="text-xs text-green-100/80">10% off at dmitools.com!</div>
+                        </div>
+                    `;
+                    container.appendChild(notif);
+                    setTimeout(() => notif.remove(), 6000);
+                }, 3500);
+            }
+            
+            updateUI();
+            renderUpgrades();
+            renderShop();
+            updateDrillButton();
+            checkAchievements();
+            saveGame();
+            
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+        }
+
+        // ========== UI UPDATE ==========
+        function updateUI() {
+            const layer = getCurrentLayer();
+            const clickDmg = getClickDamage();
+            const nextMilestone = getNextMilestone();
+            const prevMilestone = milestones[milestones.indexOf(nextMilestone) - 1] || 0;
+            const progress = ((game.depth - prevMilestone) / (nextMilestone - prevMilestone)) * 100;
+            
+            // Main stats with pop animation
+            const moneyEl = document.getElementById('money');
+            const oldMoney = moneyEl.textContent;
+            moneyEl.textContent = formatMoney(game.money);
+            if (oldMoney !== moneyEl.textContent) {
+                moneyEl.classList.add('number-pop');
+                setTimeout(() => moneyEl.classList.remove('number-pop'), 400);
+            }
+            
+            document.getElementById('depth').textContent = formatNumber(game.depth) + ' ft';
+            document.getElementById('dps').textContent = formatNumber(game.dps) + '/s';
+            document.getElementById('prestigeMulti').textContent = game.prestigeMultiplier.toFixed(2) + 'x';
+            
+            // Layer info
+            document.getElementById('layerName').textContent = layer.name;
+            document.getElementById('layerValue').textContent = formatMoney(layer.value) + '/ft';
+            
+            // Click damage
+            document.getElementById('clickDamage').textContent = formatNumber(clickDmg) + ' ft';
+            
+            // Milestone progress
+            document.getElementById('nextMilestone').textContent = formatNumber(nextMilestone) + ' ft';
+            document.getElementById('milestoneProgress').style.width = Math.min(100, progress) + '%';
+            
+            // Prestige tab
+            document.getElementById('currentMulti').textContent = game.prestigeMultiplier.toFixed(2) + 'x';
+            const gain = getPrestigeGain();
+            document.getElementById('prestigeGain').textContent = '+' + gain.toFixed(2) + 'x';
+            document.getElementById('totalAfterPrestige').textContent = (game.prestigeMultiplier + gain).toFixed(2) + 'x';
+            document.getElementById('prestigeReq').textContent = game.depth >= 10000 ? '✓ Met!' : '10,000 ft depth';
+            document.getElementById('prestigeBtn').disabled = gain <= 0;
+            
+            // Stats tab
+            document.getElementById('statTotalDepth').textContent = formatNumber(game.totalDepth) + ' ft';
+            document.getElementById('statTotalMoney').textContent = formatMoney(game.totalMoney);
+            document.getElementById('statClicks').textContent = formatNumber(game.totalClicks);
+            document.getElementById('statPrestige').textContent = game.prestigeCount;
+            document.getElementById('statUpgrades').textContent = game.totalUpgrades;
+            
+            const elapsed = Math.floor((Date.now() - game.startTime) / 1000);
+            const hours = Math.floor(elapsed / 3600);
+            const mins = Math.floor((elapsed % 3600) / 60);
+            const secs = elapsed % 60;
+            document.getElementById('statTime').textContent = `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            
+            const firstDate = new Date(game.firstPlayed);
+            document.getElementById('statFirstPlayed').textContent = firstDate.toLocaleDateString();
+            
+            // Update depth chart
+            renderDepthChart();
+        }
+
+        function renderDepthChart() {
+            const chart = document.getElementById('depthChart');
+            chart.innerHTML = '';
+            
+            const depths = game.sessionDepths.length > 0 ? game.sessionDepths : [0];
+            const max = Math.max(...depths, 1);
+            
+            for (let i = 0; i < 10; i++) {
+                const val = depths[i] || 0;
+                const height = (val / max) * 100;
+                const bar = document.createElement('div');
+                bar.className = 'chart-bar flex-1 bg-gradient-to-t from-blue-600 to-blue-400 rounded-t opacity-80';
+                bar.style.height = Math.max(4, height) + '%';
+                bar.title = formatNumber(val) + ' ft';
+                chart.appendChild(bar);
+            }
+        }
+
+        // ========== TABS ==========
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+                document.getElementById(btn.dataset.tab + 'Tab').classList.remove('hidden');
+                
+                if (btn.dataset.tab === 'achievements') {
+                    renderAchievements();
+                }
+                if (btn.dataset.tab === 'shop') {
+                    renderShop();
+                }
+            };
+        });
+
+        // ========== BUY MAX BUTTONS ==========
+        document.querySelectorAll('.buy-max-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                buyMax(btn.dataset.category);
+            };
+        });
+
+        // ========== SETTINGS ==========
+        function updateSettingsUI() {
+            const sfxToggle = document.getElementById('toggleSfx');
+            const musicToggle = document.getElementById('toggleMusic');
+            const notationToggle = document.getElementById('toggleNotation');
+            const notifsToggle = document.getElementById('toggleNotifs');
+            
+            sfxToggle.className = `w-12 h-6 rounded-full ${game.sfxEnabled ? 'bg-green-500' : 'bg-gray-500'} relative transition-colors`;
+            sfxToggle.querySelector('div').style.transform = game.sfxEnabled ? 'translateX(24px)' : 'translateX(0)';
+            
+            musicToggle.className = `w-12 h-6 rounded-full ${game.musicEnabled ? 'bg-green-500' : 'bg-gray-500'} relative transition-colors`;
+            musicToggle.querySelector('div').style.transform = game.musicEnabled ? 'translateX(24px)' : 'translateX(0)';
+            
+            notationToggle.className = `w-12 h-6 rounded-full ${game.scientificNotation ? 'bg-green-500' : 'bg-gray-500'} relative transition-colors`;
+            notationToggle.querySelector('div').style.transform = game.scientificNotation ? 'translateX(24px)' : 'translateX(0)';
+            
+            notifsToggle.className = `w-12 h-6 rounded-full ${game.notificationsEnabled ? 'bg-green-500' : 'bg-gray-500'} relative transition-colors`;
+            notifsToggle.querySelector('div').style.transform = game.notificationsEnabled ? 'translateX(24px)' : 'translateX(0)';
+            
+            // Sound toggle button in header
+            document.getElementById('soundToggle').textContent = game.sfxEnabled ? '🔊' : '🔇';
+            document.getElementById('soundToggle').classList.toggle('muted', !game.sfxEnabled);
+        }
+
+        document.getElementById('settingsBtn').onclick = () => {
+            document.getElementById('settingsModal').classList.remove('hidden');
+            updateSettingsUI();
+        };
+
+        document.getElementById('closeSettings').onclick = () => {
+            document.getElementById('settingsModal').classList.add('hidden');
+        };
+
+        document.getElementById('toggleSfx').onclick = () => {
+            game.sfxEnabled = !game.sfxEnabled;
+            AudioSystem.sfxEnabled = game.sfxEnabled;
+            updateSettingsUI();
+            saveGame();
+        };
+
+        document.getElementById('toggleMusic').onclick = () => {
+            game.musicEnabled = AudioSystem.toggleMusic();
+            updateSettingsUI();
+            saveGame();
+        };
+
+        document.getElementById('toggleNotation').onclick = () => {
+            game.scientificNotation = !game.scientificNotation;
+            updateSettingsUI();
+            updateUI();
+            renderUpgrades();
+            saveGame();
+        };
+
+        document.getElementById('toggleNotifs').onclick = async () => {
+            if (!game.notificationsEnabled && 'Notification' in window) {
+                const permission = await Notification.requestPermission();
+                game.notificationsEnabled = permission === 'granted';
+            } else {
+                game.notificationsEnabled = !game.notificationsEnabled;
+            }
+            updateSettingsUI();
+            saveGame();
+        };
+
+        document.getElementById('soundToggle').onclick = () => {
+            game.sfxEnabled = !game.sfxEnabled;
+            AudioSystem.sfxEnabled = game.sfxEnabled;
+            updateSettingsUI();
+            saveGame();
+        };
+
+        document.getElementById('resetGame').onclick = () => {
+            if (confirm('Are you sure you want to reset ALL progress? This cannot be undone!')) {
+                localStorage.removeItem('drillTycoon');
+                location.reload();
+            }
+        };
+
+        // ========== AUTO-DRILL (Idle) ==========
+        let lastTick = Date.now();
+        function tick() {
+            const now = Date.now();
+            const delta = (now - lastTick) / 1000;
+            lastTick = now;
+            
+            if (game.dps > 0) {
+                drill(game.dps * delta);
+                if (Math.random() < 0.1) createParticles(1);
+            }
+            
+            // Slow down drill animation
+            drillY = Math.max(50, drillY - 1);
+            
+            checkAchievements();
+            updateUI();
+        }
+
+        // ========== OFFLINE PROGRESS ==========
+        function calculateOfflineProgress() {
+            const now = Date.now();
+            const elapsed = (now - game.lastSave) / 1000; // seconds
+            
+            // Cap at 24 hours
+            const cappedElapsed = Math.min(elapsed, 86400);
+            
+            if (cappedElapsed > 60 && game.dps > 0) { // At least 1 minute away
+                const offlineEfficiency = 0.5; // 50% efficiency while offline
+                const depthDrilled = game.dps * cappedElapsed * offlineEfficiency;
+                const layer = getCurrentLayer();
+                const moneyEarned = depthDrilled * layer.value * getMoneyMultiplier() * offlineEfficiency;
+                
+                return { depth: depthDrilled, money: moneyEarned, seconds: cappedElapsed };
+            }
+            
+            return null;
+        }
+
+        function showOfflineProgress(progress) {
+            document.getElementById('offlineDepth').textContent = formatNumber(progress.depth) + ' ft';
+            document.getElementById('offlineMoney').textContent = formatMoney(progress.money);
+            document.getElementById('offlineModal').classList.remove('hidden');
+            
+            document.getElementById('offlineClaimBtn').onclick = () => {
+                game.depth += progress.depth;
+                game.money += progress.money;
+                game.totalDepth += progress.depth;
+                game.totalMoney += progress.money;
+                
+                document.getElementById('offlineModal').classList.add('hidden');
+                AudioSystem.playAchievement();
+                updateUI();
+                renderUpgrades();
+                checkAchievements();
+                
+                if (navigator.vibrate) navigator.vibrate([100, 50, 200]);
+            };
+        }
+
+        // ========== IDLE NOTIFICATION ==========
+        let lastActivity = Date.now();
+        let notificationSent = false;
+
+        function checkIdleNotification() {
+            if (!game.notificationsEnabled || notificationSent) return;
+            
+            const idleTime = Date.now() - lastActivity;
+            if (idleTime > 300000 && game.dps > 0) { // 5 minutes
+                notificationSent = true;
+                new Notification('⛏️ Your drills are waiting!', {
+                    body: `Your rigs have been drilling! Come back and collect ${formatMoney(game.dps * 300)} worth of progress!`,
+                    icon: '⛏️'
+                });
+            }
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                lastActivity = Date.now();
+                notificationSent = false;
+            }
+        });
+
+        // ========== SAVE/LOAD ==========
+        function saveGame() {
+            game.lastSave = Date.now();
+            localStorage.setItem('drillTycoon', JSON.stringify(game));
+        }
+
+        function loadGame() {
+            const saved = localStorage.getItem('drillTycoon');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    
+                    // Merge with defaults for new properties
+                    Object.assign(game, {
+                        ...game,
+                        ...data,
+                        upgrades: {
+                            drillBits: { ...game.upgrades.drillBits, ...(data.upgrades?.drillBits || {}) },
+                            motors: { ...game.upgrades.motors, ...(data.upgrades?.motors || {}) },
+                            accessories: { ...game.upgrades.accessories, ...(data.upgrades?.accessories || {}) }
+                        },
+                        achievements: {
+                            ...game.achievements,
+                            ...(data.achievements || {})
+                        }
+                    });
+                    
+                    game.dps = calculateDPS();
+                    
+                    // Check for offline progress
+                    const offlineProgress = calculateOfflineProgress();
+                    if (offlineProgress) {
+                        setTimeout(() => showOfflineProgress(offlineProgress), 500);
+                    }
+                } catch (e) {
+                    console.warn('Failed to load save:', e);
+                }
+            }
+        }
+
+        // ========== INIT ==========
+        AudioSystem.init();
+        loadGame();
+        
+        // Apply loaded settings
+        AudioSystem.sfxEnabled = game.sfxEnabled;
+        if (game.musicEnabled) {
+            // Defer music start until user interaction
+            document.addEventListener('click', () => {
+                if (game.musicEnabled && !AudioSystem.musicOsc) {
+                    AudioSystem.startMusic();
+                }
+            }, { once: true });
+        }
+        
+        // Event listeners
+        const drillBtn = document.getElementById('drillBtn');
+        drillBtn.addEventListener('click', handleClick);
+        drillBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleClick(e.touches[0]);
+        }, { passive: false });
+        
+        document.getElementById('prestigeBtn').addEventListener('click', prestige);
+        
+        // Track activity
+        document.addEventListener('click', () => lastActivity = Date.now());
+        document.addEventListener('touchstart', () => lastActivity = Date.now());
+        
+        // Game loops
+        setInterval(tick, 50);
+        setInterval(renderUpgrades, 500);
+        setInterval(saveGame, 5000);
+        setInterval(checkIdleNotification, 60000);
+        
+        // Initial render
+        updateUI();
+        renderUpgrades();
+        renderShop();
+        updateDrillButton();
+        updateSettingsUI();
+        render();
+        
+        // Log startup
+        console.log('⛏️ Drill Tycoon v2.1 - Powered by DMI Tools!');
+        console.log('🔊 Sound effects:', game.sfxEnabled ? 'ON' : 'OFF');
+        console.log('🎵 Music:', game.musicEnabled ? 'ON' : 'OFF');
+        console.log('🛒 DMI Shop integrated with real products!');
+    </script>
+</body>
+</html>

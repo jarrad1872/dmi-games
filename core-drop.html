@@ -1,0 +1,2727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Core Drop - DMI Tools Drilling Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3e 50%, #0a0a1a 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+        
+        #gameContainer {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            aspect-ratio: 9/16;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border-radius: 12px;
+            box-shadow: 0 0 50px rgba(255, 100, 50, 0.4), 0 0 100px rgba(0, 150, 255, 0.2);
+        }
+        
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            color: #fff;
+            font-size: 13px;
+            text-shadow: 2px 2px 0 #000;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .stat {
+            background: rgba(0,0,0,0.7);
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,215,0,0.3);
+        }
+        
+        #comboDisplay {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff6b35;
+            text-shadow: 0 0 20px #ff6b35, 2px 2px 0 #000;
+            pointer-events: none;
+            z-index: 15;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        #comboDisplay.active {
+            opacity: 1;
+            animation: comboPulse 0.3s ease-out;
+        }
+        
+        @keyframes comboPulse {
+            0% { transform: translateX(-50%) scale(1.5); }
+            100% { transform: translateX(-50%) scale(1); }
+        }
+        
+        #powerUpIndicator {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            pointer-events: none;
+            z-index: 15;
+        }
+        
+        .power-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            opacity: 0.3;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .power-icon.active {
+            opacity: 1;
+            animation: powerGlow 1s ease-in-out infinite;
+        }
+        
+        .power-shield { background: rgba(0,200,255,0.3); border-color: #00c8ff; }
+        .power-slowmo { background: rgba(255,100,255,0.3); border-color: #ff64ff; }
+        .power-magnet { background: rgba(255,215,0,0.3); border-color: #ffd700; }
+        
+        @keyframes powerGlow {
+            0%, 100% { box-shadow: 0 0 10px currentColor; }
+            50% { box-shadow: 0 0 25px currentColor; }
+        }
+        
+        #unlock {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #000;
+            padding: 25px 40px;
+            border-radius: 15px;
+            font-size: 22px;
+            font-weight: bold;
+            text-align: center;
+            display: none;
+            z-index: 25;
+            pointer-events: none;
+            box-shadow: 0 0 50px #ffd700, 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        #unlock.show {
+            display: block;
+            animation: unlockBurst 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        
+        @keyframes unlockBurst {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(-10deg); }
+            50% { transform: translate(-50%, -50%) scale(1.2) rotate(5deg); }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+        }
+        
+        #pauseBtn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0,0,0,0.7);
+            border: 2px solid #ffd700;
+            border-radius: 10px;
+            color: #ffd700;
+            font-size: 18px;
+            cursor: pointer;
+            z-index: 20;
+            display: none;
+        }
+        
+        #pauseMenu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 35;
+            color: #fff;
+        }
+        
+        #pauseMenu h2 {
+            font-size: 36px;
+            color: #ffd700;
+            margin-bottom: 40px;
+        }
+        
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.92);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            z-index: 30;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        #gameOver, #tutorial {
+            display: none;
+        }
+        
+        .brand-header {
+            margin-bottom: 10px;
+        }
+        
+        .brand-logo {
+            font-size: 14px;
+            color: #ff6b35;
+            letter-spacing: 3px;
+            font-weight: bold;
+            text-shadow: 0 0 10px #ff6b35;
+        }
+        
+        .brand-tagline {
+            font-size: 10px;
+            color: #888;
+            letter-spacing: 1px;
+        }
+        
+        h1 {
+            font-size: 38px;
+            color: #ffd700;
+            margin-bottom: 5px;
+            text-shadow: 3px 3px 0 #8b4513, 0 0 30px rgba(255,215,0,0.5);
+        }
+        
+        .subtitle {
+            color: #aaa;
+            margin-bottom: 25px;
+            font-size: 13px;
+        }
+        
+        .instructions {
+            background: rgba(255,255,255,0.08);
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            font-size: 14px;
+            line-height: 1.8;
+            border: 1px solid rgba(255,215,0,0.2);
+            max-width: 320px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            color: white;
+            border: none;
+            padding: 16px 45px;
+            font-size: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            text-transform: uppercase;
+            box-shadow: 0 6px 0 #1B5E20, 0 10px 20px rgba(0,0,0,0.3);
+            transition: all 0.1s;
+            margin: 8px;
+        }
+        
+        .btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 #1B5E20;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #666, #444);
+            box-shadow: 0 6px 0 #333, 0 10px 20px rgba(0,0,0,0.3);
+        }
+        
+        .btn-share {
+            background: linear-gradient(135deg, #1da1f2, #0d8bd9);
+            box-shadow: 0 6px 0 #0a6da8, 0 10px 20px rgba(0,0,0,0.3);
+            font-size: 16px;
+            padding: 12px 30px;
+        }
+        
+        .btn-shop {
+            background: linear-gradient(135deg, #ff6b35, #ff4500);
+            box-shadow: 0 6px 0 #cc3700, 0 10px 20px rgba(0,0,0,0.3);
+            font-size: 14px;
+            padding: 10px 25px;
+        }
+        
+        .btn-sound {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            width: 45px;
+            height: 45px;
+            padding: 0;
+            font-size: 20px;
+            border-radius: 50%;
+        }
+        
+        .score-display {
+            font-size: 56px;
+            color: #ffd700;
+            margin: 15px 0;
+            text-shadow: 0 0 30px rgba(255,215,0,0.5);
+        }
+        
+        .stats-row {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .leaderboard {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            width: 280px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        
+        .leaderboard h3 {
+            color: #ffd700;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .leaderboard-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 12px;
+        }
+        
+        .leaderboard-entry.highlight {
+            color: #ffd700;
+            font-weight: bold;
+        }
+        
+        .equipment-panel {
+            background: rgba(0,0,0,0.6);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: left;
+            font-size: 12px;
+            border: 1px solid rgba(255,215,0,0.3);
+        }
+        
+        .equipment-panel h3 {
+            color: #ffd700;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .bit-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .bit-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            opacity: 0.5;
+        }
+        
+        .bit-item.unlocked {
+            opacity: 1;
+        }
+        
+        .bit-item.current {
+            border: 2px solid #ffd700;
+            background: rgba(255,215,0,0.1);
+        }
+        
+        .bit-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        
+        .bit-stats {
+            font-size: 10px;
+            color: #888;
+        }
+        
+        .near-miss {
+            position: absolute;
+            color: #00ff88;
+            font-size: 18px;
+            font-weight: bold;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+            z-index: 15;
+            text-shadow: 0 0 10px #00ff88;
+        }
+        
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.2); }
+            100% { opacity: 0; transform: translateY(-60px) scale(0.8); }
+        }
+        
+        .flash-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0;
+            border-radius: 12px;
+        }
+        
+        .flash-overlay.hit {
+            background: radial-gradient(circle, rgba(255,0,0,0.6) 0%, transparent 70%);
+            animation: flashHit 0.3s ease-out;
+        }
+        
+        .flash-overlay.powerup {
+            background: radial-gradient(circle, rgba(255,215,0,0.6) 0%, transparent 70%);
+            animation: flashHit 0.3s ease-out;
+        }
+        
+        @keyframes flashHit {
+            0% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        
+        .confetti {
+            position: absolute;
+            pointer-events: none;
+            z-index: 24;
+        }
+        
+        #tutorialOverlay {
+            font-size: 16px;
+            line-height: 2;
+        }
+        
+        .tutorial-step {
+            background: rgba(255,215,0,0.1);
+            padding: 15px 25px;
+            border-radius: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #ffd700;
+        }
+        
+        .skip-tutorial {
+            color: #888;
+            font-size: 12px;
+            margin-top: 20px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        
+        /* Product Modal Styles */
+        #productModal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            color: #fff;
+            padding: 20px;
+        }
+        
+        #productModal.show {
+            display: flex;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        .product-card {
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            border-radius: 16px;
+            padding: 25px;
+            max-width: 320px;
+            text-align: center;
+            border: 2px solid #ff6b35;
+            box-shadow: 0 0 30px rgba(255,107,53,0.3);
+        }
+        
+        .product-badge {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #000;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+        
+        .product-image {
+            width: 150px;
+            height: 150px;
+            background: linear-gradient(135deg, #3a3a3a, #2a2a2a);
+            border-radius: 12px;
+            margin: 15px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            border: 2px dashed #555;
+        }
+        
+        .product-name {
+            font-size: 22px;
+            color: #ffd700;
+            margin: 10px 0;
+            text-shadow: 0 0 10px rgba(255,215,0,0.3);
+        }
+        
+        .product-price {
+            font-size: 28px;
+            color: #4CAF50;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .product-desc {
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .product-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .btn-buy {
+            background: linear-gradient(135deg, #ff6b35, #ff4500);
+            box-shadow: 0 4px 0 #cc3700;
+            padding: 14px 30px;
+            font-size: 16px;
+        }
+        
+        .btn-later {
+            background: transparent;
+            border: 1px solid #666;
+            color: #888;
+            padding: 10px 20px;
+            font-size: 13px;
+            box-shadow: none;
+        }
+        
+        .btn-later:active {
+            transform: none;
+            background: rgba(255,255,255,0.05);
+        }
+        
+        /* Shop Panel Styles */
+        #shopPanel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.95);
+            display: none;
+            flex-direction: column;
+            z-index: 40;
+            color: #fff;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        #shopPanel.show {
+            display: flex;
+        }
+        
+        .shop-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .shop-header h2 {
+            color: #ffd700;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .shop-header p {
+            color: #888;
+            font-size: 12px;
+        }
+        
+        .shop-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 20px;
+        }
+        
+        .shop-item {
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #333;
+            opacity: 0.4;
+            transition: all 0.3s;
+        }
+        
+        .shop-item.discovered {
+            opacity: 1;
+            border-color: #ff6b35;
+        }
+        
+        .shop-item-icon {
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+        
+        .shop-item-name {
+            font-size: 11px;
+            color: #ffd700;
+            margin-bottom: 5px;
+        }
+        
+        .shop-item-price {
+            font-size: 13px;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        
+        .shop-item-locked {
+            font-size: 10px;
+            color: #666;
+        }
+        
+        .shop-close {
+            margin-top: 15px;
+        }
+        
+        .discovered-count {
+            background: rgba(255,107,53,0.2);
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #ff6b35;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="game"></canvas>
+        
+        <div id="flashOverlay" class="flash-overlay"></div>
+        
+        <div id="ui">
+            <div>
+                <div class="stat">⛏️ <span id="depth">0</span>m</div>
+                <div class="stat" style="margin-top:5px">💎 <span id="score">0</span></div>
+            </div>
+            <div style="text-align:right">
+                <div class="stat" id="bitDisplay">Standard</div>
+                <div class="stat" style="margin-top:5px">🏆 <span id="highScore">0</span></div>
+            </div>
+        </div>
+        
+        <div id="comboDisplay">🔥 COMBO x<span id="comboMultiplier">2</span></div>
+        
+        <div id="powerUpIndicator">
+            <div class="power-icon power-shield" id="shieldIcon">🛡️</div>
+            <div class="power-icon power-slowmo" id="slowmoIcon">⏱️</div>
+            <div class="power-icon power-magnet" id="magnetIcon">🧲</div>
+        </div>
+        
+        <button id="pauseBtn">⏸️</button>
+        
+        <div id="unlock">
+            🎉 NEW BIT UNLOCKED! 🎉<br>
+            <span id="bitName" style="font-size:28px;color:#fff;text-shadow:2px 2px 0 #8b4513;"></span>
+        </div>
+        
+        <!-- Product Modal -->
+        <div id="productModal">
+            <div class="product-card">
+                <div class="product-badge">🎮 GET THE REAL THING!</div>
+                <div class="product-image" id="productImage">🔧</div>
+                <div class="product-name" id="productName">Product Name</div>
+                <div class="product-price" id="productPrice">$0.00</div>
+                <div class="product-desc" id="productDesc">Description</div>
+                <div class="product-buttons">
+                    <button class="btn btn-buy" id="productBuyBtn">🛒 SHOP NOW</button>
+                    <button class="btn btn-later" id="productLaterBtn">Maybe Later</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Shop Panel -->
+        <div id="shopPanel">
+            <div class="shop-header">
+                <h2>🛒 DMI TOOLS SHOP</h2>
+                <p>Professional Core Drilling Equipment</p>
+                <div class="discovered-count">
+                    <span id="discoveredCount">0</span> / <span id="totalProducts">0</span> Products Discovered
+                </div>
+            </div>
+            <div class="shop-grid" id="shopGrid"></div>
+            <button class="btn btn-secondary shop-close" id="shopCloseBtn">✕ CLOSE SHOP</button>
+        </div>
+        
+        <!-- Start Screen -->
+        <div id="startScreen" class="overlay">
+            <div class="brand-header">
+                <div class="brand-logo">⚙️ DMI TOOLS ⚙️</div>
+                <div class="brand-tagline">Professional Drilling Equipment</div>
+            </div>
+            <h1>CORE DROP</h1>
+            <div class="subtitle">Concrete Core Drilling Simulator</div>
+            
+            <div class="equipment-panel" id="equipmentPanel">
+                <h3>🔧 YOUR EQUIPMENT</h3>
+                <div class="bit-list" id="bitList"></div>
+            </div>
+            
+            <button class="btn" id="startBtn">🚀 START DRILLING</button>
+            <button class="btn btn-shop" id="shopBtn">🛒 SHOP</button>
+            <button class="btn btn-sound" id="soundToggle">🔊</button>
+        </div>
+        
+        <!-- Tutorial -->
+        <div id="tutorial" class="overlay">
+            <div class="brand-header">
+                <div class="brand-logo">⚙️ DMI TOOLS ⚙️</div>
+            </div>
+            <h1 style="font-size:28px;">HOW TO DRILL</h1>
+            
+            <div id="tutorialOverlay">
+                <div class="tutorial-step">👆 <strong>TAP & HOLD</strong> to drill down</div>
+                <div class="tutorial-step">✋ <strong>RELEASE</strong> to slow/stop</div>
+                <div class="tutorial-step">❌ <strong>AVOID:</strong> Rebar 🔴 Pipes 🔵 Rocks 🟤</div>
+                <div class="tutorial-step">⭐ <strong>NEAR MISSES</strong> = Bonus points + Combos!</div>
+                <div class="tutorial-step">🎁 <strong>GRAB POWER-UPS</strong> for special abilities!</div>
+            </div>
+            
+            <button class="btn" id="tutorialOk">GOT IT!</button>
+            <div class="skip-tutorial" id="skipTutorial">Don't show again</div>
+        </div>
+        
+        <!-- Pause Menu -->
+        <div id="pauseMenu">
+            <h2>⏸️ PAUSED</h2>
+            <button class="btn" id="resumeBtn">▶️ RESUME</button>
+            <button class="btn btn-secondary" id="restartFromPause">🔄 RESTART</button>
+            <button class="btn btn-shop" id="pauseShopBtn">🛒 SHOP</button>
+            <button class="btn btn-secondary btn-sound" id="pauseSoundToggle" style="position:static;margin-top:20px;">🔊</button>
+        </div>
+        
+        <!-- Game Over -->
+        <div id="gameOver" class="overlay">
+            <div class="brand-header">
+                <div class="brand-logo">⚙️ DMI TOOLS ⚙️</div>
+            </div>
+            <h1>💥 DRILL BROKE!</h1>
+            <div class="subtitle" id="hitMessage">Hit an obstacle!</div>
+            <div class="score-display" id="finalScore">0</div>
+            
+            <div class="stats-row">
+                <div>📏 Depth: <span id="finalDepth">0</span>m</div>
+                <div>🎯 Near Misses: <span id="nearMisses">0</span></div>
+            </div>
+            <div class="stats-row">
+                <div>🔥 Best Combo: <span id="bestCombo">0</span>x</div>
+                <div>💎 Bonus: +<span id="nearMissBonus">0</span></div>
+            </div>
+            
+            <div class="leaderboard" id="leaderboard">
+                <h3>🏆 HIGH SCORES</h3>
+                <div id="leaderboardList"></div>
+            </div>
+            
+            <button class="btn" id="restartBtn">🔄 TRY AGAIN</button>
+            <button class="btn btn-shop" id="gameOverShopBtn">🛒 SHOP</button>
+            <button class="btn btn-share" id="shareBtn">📤 SHARE SCORE</button>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // DMI TOOLS PRODUCT DATA
+        // ============================================
+        const PRODUCTS = [
+            // Core Bits
+            {
+                id: 'cb-1inch',
+                name: '1" Diamond Core Bit',
+                price: 89.99,
+                icon: '💎',
+                category: 'bits',
+                description: 'Entry-level diamond segment bit for light-duty coring. Perfect for electrical and plumbing runs.',
+                url: 'https://dmitools.com/product/1-inch-diamond-core-bit',
+                unlockDepth: 0,
+                bitIndex: 0
+            },
+            {
+                id: 'cb-2inch',
+                name: '2" Diamond Core Bit',
+                price: 129.99,
+                icon: '💎',
+                category: 'bits',
+                description: 'Professional grade diamond segments. Ideal for conduit and small pipe penetrations.',
+                url: 'https://dmitools.com/product/2-inch-diamond-core-bit',
+                unlockDepth: 50,
+                bitIndex: 1
+            },
+            {
+                id: 'cb-3inch',
+                name: '3" Diamond Core Bit',
+                price: 169.99,
+                icon: '💎',
+                category: 'bits',
+                description: 'Heavy-duty diamond core bit. Standard size for HVAC and plumbing applications.',
+                url: 'https://dmitools.com/product/3-inch-diamond-core-bit',
+                unlockDepth: 150,
+                bitIndex: 2
+            },
+            {
+                id: 'cb-4inch',
+                name: '4" Diamond Core Bit',
+                price: 219.99,
+                icon: '💎',
+                category: 'bits',
+                description: 'Premium diamond segments for reinforced concrete. Cuts through rebar with ease.',
+                url: 'https://dmitools.com/product/4-inch-diamond-core-bit',
+                unlockDepth: 300,
+                bitIndex: 3
+            },
+            {
+                id: 'cb-6inch',
+                name: '6" Diamond Core Bit',
+                price: 349.99,
+                icon: '💎',
+                category: 'bits',
+                description: 'Industrial-grade large diameter bit. For major mechanical penetrations.',
+                url: 'https://dmitools.com/product/6-inch-diamond-core-bit',
+                unlockDepth: 500,
+                bitIndex: 4
+            },
+            // Motors
+            {
+                id: 'motor-handheld',
+                name: 'Handheld Core Drill Motor',
+                price: 599.99,
+                icon: '⚡',
+                category: 'motors',
+                description: '15 Amp motor with 2-speed gearbox. Lightweight design for overhead and wall drilling.',
+                url: 'https://dmitools.com/product/handheld-core-drill-motor',
+                unlockDepth: 100
+            },
+            {
+                id: 'motor-rigmount',
+                name: 'Rig-Mount Drill Motor',
+                price: 899.99,
+                icon: '⚡',
+                category: 'motors',
+                description: '20 Amp heavy-duty motor with clutch protection. 3-speed transmission for all applications.',
+                url: 'https://dmitools.com/product/rig-mount-drill-motor',
+                unlockDepth: 250
+            },
+            // Stands
+            {
+                id: 'stand-basic',
+                name: 'Basic Drill Stand',
+                price: 449.99,
+                icon: '🗼',
+                category: 'stands',
+                description: 'Adjustable angle base with vacuum pad. Supports bits up to 4" diameter.',
+                url: 'https://dmitools.com/product/basic-drill-stand',
+                unlockDepth: 75
+            },
+            {
+                id: 'stand-pro',
+                name: 'Pro Drill Rig Stand',
+                price: 799.99,
+                icon: '🗼',
+                category: 'stands',
+                description: 'Heavy-duty anchor base with fine-feed handle. Supports bits up to 8" diameter.',
+                url: 'https://dmitools.com/product/pro-drill-rig-stand',
+                unlockDepth: 350
+            },
+            // Accessories
+            {
+                id: 'slurry-ring',
+                name: 'Slurry Containment Ring',
+                price: 49.99,
+                icon: '💧',
+                category: 'accessories',
+                description: 'Magnetic slurry dam keeps water contained. Essential for clean indoor coring jobs.',
+                url: 'https://dmitools.com/product/slurry-containment-ring',
+                unlockDepth: 25
+            },
+            {
+                id: 'vacuum-kit',
+                name: 'Wet/Dry Vacuum Kit',
+                price: 279.99,
+                icon: '🌀',
+                category: 'accessories',
+                description: 'Industrial vacuum with slurry tank. Includes hose adapter for core drilling.',
+                url: 'https://dmitools.com/product/wet-dry-vacuum-kit',
+                unlockDepth: 200
+            },
+            {
+                id: 'water-tank',
+                name: 'Pressurized Water Tank',
+                price: 159.99,
+                icon: '🚿',
+                category: 'accessories',
+                description: '3-gallon pressurized tank for wet coring. No pump needed - hand pressurized.',
+                url: 'https://dmitools.com/product/pressurized-water-tank',
+                unlockDepth: 125
+            }
+        ];
+        
+        // ============================================
+        // AUDIO ENGINE (Web Audio API)
+        // ============================================
+        class AudioEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+                this.musicEnabled = true;
+                this.musicOsc = null;
+                this.musicGain = null;
+                this.drillOsc = null;
+                this.drillGain = null;
+                this.initialized = false;
+            }
+            
+            init() {
+                if (this.initialized) return;
+                try {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    this.initialized = true;
+                } catch(e) {
+                    console.log('Web Audio not supported');
+                }
+            }
+            
+            resume() {
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+            
+            // Drill sound (continuous when drilling)
+            startDrill() {
+                if (!this.ctx || !this.enabled) return;
+                this.stopDrill();
+                
+                this.drillOsc = this.ctx.createOscillator();
+                this.drillGain = this.ctx.createGain();
+                const filter = this.ctx.createBiquadFilter();
+                
+                this.drillOsc.type = 'sawtooth';
+                this.drillOsc.frequency.value = 120;
+                filter.type = 'lowpass';
+                filter.frequency.value = 800;
+                
+                this.drillOsc.connect(filter);
+                filter.connect(this.drillGain);
+                this.drillGain.connect(this.ctx.destination);
+                this.drillGain.gain.value = 0.08;
+                
+                this.drillOsc.start();
+                
+                // Add wobble
+                const lfo = this.ctx.createOscillator();
+                const lfoGain = this.ctx.createGain();
+                lfo.frequency.value = 15;
+                lfoGain.gain.value = 30;
+                lfo.connect(lfoGain);
+                lfoGain.connect(this.drillOsc.frequency);
+                lfo.start();
+                this.drillLfo = lfo;
+            }
+            
+            stopDrill() {
+                if (this.drillOsc) {
+                    try {
+                        this.drillOsc.stop();
+                        this.drillLfo?.stop();
+                    } catch(e) {}
+                    this.drillOsc = null;
+                    this.drillLfo = null;
+                }
+            }
+            
+            // Collision sound
+            playCollision() {
+                if (!this.ctx || !this.enabled) return;
+                
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                const noise = this.createNoise(0.3);
+                
+                osc.type = 'square';
+                osc.frequency.value = 80;
+                osc.connect(gain);
+                noise.connect(gain);
+                gain.connect(this.ctx.destination);
+                gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+                gain.gain.exponentialDecayTo(0.01, this.ctx.currentTime + 0.3);
+                
+                osc.frequency.setValueAtTime(80, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.2);
+                
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.3);
+            }
+            
+            // Near miss sound
+            playNearMiss() {
+                if (!this.ctx || !this.enabled) return;
+                
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.value = 600;
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+                
+                osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, this.ctx.currentTime + 0.1);
+                
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.15);
+            }
+            
+            // Combo sound (ascending)
+            playCombo(level) {
+                if (!this.ctx || !this.enabled) return;
+                
+                const baseFreq = 400 + (level * 100);
+                [0, 0.08, 0.16].forEach((delay, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = baseFreq + (i * 150);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    gain.gain.setValueAtTime(0, this.ctx.currentTime + delay);
+                    gain.gain.linearRampToValueAtTime(0.12, this.ctx.currentTime + delay + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + delay + 0.15);
+                    osc.start(this.ctx.currentTime + delay);
+                    osc.stop(this.ctx.currentTime + delay + 0.15);
+                });
+            }
+            
+            // Power-up sound
+            playPowerUp() {
+                if (!this.ctx || !this.enabled) return;
+                
+                [0, 0.1, 0.2].forEach((delay, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = 500 + (i * 200);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    gain.gain.setValueAtTime(0.15, this.ctx.currentTime + delay);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + delay + 0.2);
+                    osc.start(this.ctx.currentTime + delay);
+                    osc.stop(this.ctx.currentTime + delay + 0.2);
+                });
+            }
+            
+            // Unlock fanfare
+            playUnlock() {
+                if (!this.ctx || !this.enabled) return;
+                
+                const melody = [523, 659, 784, 1047]; // C5, E5, G5, C6
+                melody.forEach((freq, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.value = freq;
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    const t = this.ctx.currentTime + i * 0.12;
+                    gain.gain.setValueAtTime(0.12, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
+                    osc.start(t);
+                    osc.stop(t + 0.4);
+                });
+                
+                // Shimmer effect
+                for (let i = 0; i < 8; i++) {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = 2000 + Math.random() * 2000;
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    const t = this.ctx.currentTime + 0.4 + Math.random() * 0.3;
+                    gain.gain.setValueAtTime(0.05, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+                    osc.start(t);
+                    osc.stop(t + 0.3);
+                }
+            }
+            
+            // Background music (procedural bass line)
+            startMusic() {
+                if (!this.ctx || !this.musicEnabled) return;
+                this.stopMusic();
+                
+                const bass = this.ctx.createOscillator();
+                const bassGain = this.ctx.createGain();
+                const filter = this.ctx.createBiquadFilter();
+                
+                bass.type = 'triangle';
+                bass.frequency.value = 55; // A1
+                filter.type = 'lowpass';
+                filter.frequency.value = 200;
+                
+                bass.connect(filter);
+                filter.connect(bassGain);
+                bassGain.connect(this.ctx.destination);
+                bassGain.gain.value = 0.06;
+                
+                bass.start();
+                this.musicOsc = bass;
+                this.musicGain = bassGain;
+                
+                // Arpeggiate
+                const notes = [55, 55, 73, 55, 82, 55, 73, 55];
+                let noteIndex = 0;
+                this.musicInterval = setInterval(() => {
+                    if (this.musicOsc && this.musicEnabled) {
+                        this.musicOsc.frequency.setTargetAtTime(notes[noteIndex], this.ctx.currentTime, 0.05);
+                        noteIndex = (noteIndex + 1) % notes.length;
+                    }
+                }, 250);
+            }
+            
+            stopMusic() {
+                if (this.musicOsc) {
+                    try { this.musicOsc.stop(); } catch(e) {}
+                    this.musicOsc = null;
+                }
+                if (this.musicInterval) {
+                    clearInterval(this.musicInterval);
+                    this.musicInterval = null;
+                }
+            }
+            
+            createNoise(duration) {
+                const bufferSize = this.ctx.sampleRate * duration;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const output = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+                return noise;
+            }
+            
+            toggle() {
+                this.enabled = !this.enabled;
+                this.musicEnabled = this.enabled;
+                if (!this.enabled) {
+                    this.stopDrill();
+                    this.stopMusic();
+                }
+                return this.enabled;
+            }
+        }
+        
+        // Polyfill for exponentialDecayTo
+        if (!GainNode.prototype.exponentialDecayTo) {
+            GainNode.prototype.exponentialDecayTo = function(value, endTime) {
+                this.gain.exponentialRampToValueAtTime(Math.max(value, 0.0001), endTime);
+            };
+        }
+        
+        const audio = new AudioEngine();
+        
+        // ============================================
+        // HAPTIC FEEDBACK
+        // ============================================
+        function haptic(type = 'light') {
+            if ('vibrate' in navigator) {
+                switch(type) {
+                    case 'light': navigator.vibrate(10); break;
+                    case 'medium': navigator.vibrate(25); break;
+                    case 'heavy': navigator.vibrate([50, 30, 50]); break;
+                    case 'success': navigator.vibrate([30, 50, 30, 50, 100]); break;
+                    case 'collision': navigator.vibrate([100, 50, 100, 50, 200]); break;
+                }
+            }
+        }
+        
+        // ============================================
+        // GAME CONFIGURATION
+        // ============================================
+        const CONFIG = {
+            width: 360,
+            height: 640,
+            drillSpeed: 3,
+            maxDrillSpeed: 6,
+            obstacleSpawnRate: 0.018,
+            powerUpSpawnRate: 0.003,
+            nearMissDistance: 25,
+            depthPerPixel: 0.01,
+            difficultyScale: 0.002,
+            comboWindow: 2000, // ms to chain near misses
+            bits: [
+                { name: 'Standard', depth: 0, color: '#888', speed: 1, desc: 'Basic carbide tip' },
+                { name: 'Carbide Pro', depth: 50, color: '#00bcd4', speed: 1.2, desc: '+20% speed' },
+                { name: 'Diamond Core', depth: 150, color: '#e91e63', speed: 1.4, desc: '+40% speed' },
+                { name: 'Tungsten Elite', depth: 300, color: '#ffd700', speed: 1.6, desc: '+60% speed' },
+                { name: 'Plasma Cutter', depth: 500, color: '#ff5722', speed: 2.0, desc: '+100% speed' }
+            ],
+            powerUps: ['shield', 'slowmo', 'magnet']
+        };
+        
+        // ============================================
+        // GAME STATE
+        // ============================================
+        let game = {
+            canvas: null,
+            ctx: null,
+            running: false,
+            paused: false,
+            drilling: false,
+            depth: 0,
+            score: 0,
+            baseScore: 0, // Track base score from depth separately
+            bonusScore: 0, // Track bonus score from near misses and pickups
+            nearMissCount: 0,
+            combo: 0,
+            maxCombo: 0,
+            lastNearMissTime: 0,
+            bestDepth: 0,
+            bestScore: 0,
+            currentBit: 0,
+            unlockedBits: [true, false, false, false, false],
+            leaderboard: [],
+            drill: { x: 180, y: 100, width: 30, height: 60, vy: 0 },
+            obstacles: [],
+            powerUps: [],
+            particles: [],
+            confetti: [],
+            slurry: [],
+            bonusPickups: [],
+            screenShake: 0,
+            flashType: null,
+            lastTime: 0,
+            difficulty: 1,
+            // Power-up states
+            shieldActive: false,
+            shieldTimer: 0,
+            slowmoActive: false,
+            slowmoTimer: 0,
+            magnetActive: false,
+            magnetTimer: 0,
+            // Tutorial
+            tutorialShown: false,
+            // Products
+            discoveredProducts: [],
+            pendingProductModal: null,
+            shownProductModals: [] // Track which modals have been shown this session
+        };
+        
+        // ============================================
+        // PRODUCT FUNCTIONS
+        // ============================================
+        function loadDiscoveredProducts() {
+            const saved = localStorage.getItem('coreDropProducts');
+            if (saved) {
+                game.discoveredProducts = JSON.parse(saved);
+            } else {
+                game.discoveredProducts = [];
+            }
+        }
+        
+        function saveDiscoveredProducts() {
+            localStorage.setItem('coreDropProducts', JSON.stringify(game.discoveredProducts));
+        }
+        
+        function discoverProduct(productId) {
+            if (!game.discoveredProducts.includes(productId)) {
+                game.discoveredProducts.push(productId);
+                saveDiscoveredProducts();
+                return true;
+            }
+            return false;
+        }
+        
+        function isProductDiscovered(productId) {
+            return game.discoveredProducts.includes(productId);
+        }
+        
+        function getProductByBitIndex(bitIndex) {
+            return PRODUCTS.find(p => p.bitIndex === bitIndex);
+        }
+        
+        function getProductByDepth(depth) {
+            // Find product closest to but not exceeding depth
+            return PRODUCTS
+                .filter(p => p.unlockDepth <= depth && !isProductDiscovered(p.id))
+                .sort((a, b) => b.unlockDepth - a.unlockDepth)[0];
+        }
+        
+        function showProductModal(product) {
+            if (!product) return;
+            
+            // Don't show the same modal twice in one session
+            if (game.shownProductModals.includes(product.id)) return;
+            game.shownProductModals.push(product.id);
+            
+            // Discover the product
+            discoverProduct(product.id);
+            
+            // Populate modal
+            document.getElementById('productImage').textContent = product.icon;
+            document.getElementById('productName').textContent = product.name;
+            document.getElementById('productPrice').textContent = '$' + product.price.toFixed(2);
+            document.getElementById('productDesc').textContent = product.description;
+            
+            // Store product URL for buy button
+            document.getElementById('productBuyBtn').onclick = () => {
+                window.open(product.url, '_blank');
+                closeProductModal();
+            };
+            
+            // Show modal
+            document.getElementById('productModal').classList.add('show');
+        }
+        
+        function closeProductModal() {
+            document.getElementById('productModal').classList.remove('show');
+            game.pendingProductModal = null;
+        }
+        
+        function showShopPanel() {
+            const grid = document.getElementById('shopGrid');
+            grid.innerHTML = '';
+            
+            PRODUCTS.forEach(product => {
+                const discovered = isProductDiscovered(product.id);
+                const div = document.createElement('div');
+                div.className = 'shop-item' + (discovered ? ' discovered' : '');
+                
+                if (discovered) {
+                    div.innerHTML = `
+                        <div class="shop-item-icon">${product.icon}</div>
+                        <div class="shop-item-name">${product.name}</div>
+                        <div class="shop-item-price">$${product.price.toFixed(2)}</div>
+                    `;
+                    div.onclick = () => window.open(product.url, '_blank');
+                    div.style.cursor = 'pointer';
+                } else {
+                    div.innerHTML = `
+                        <div class="shop-item-icon">🔒</div>
+                        <div class="shop-item-name">???</div>
+                        <div class="shop-item-locked">Drill ${product.unlockDepth}m to discover</div>
+                    `;
+                }
+                
+                grid.appendChild(div);
+            });
+            
+            document.getElementById('discoveredCount').textContent = game.discoveredProducts.length;
+            document.getElementById('totalProducts').textContent = PRODUCTS.length;
+            
+            document.getElementById('shopPanel').classList.add('show');
+        }
+        
+        function closeShopPanel() {
+            document.getElementById('shopPanel').classList.remove('show');
+        }
+        
+        // Check for new product discoveries based on current depth
+        function checkProductDiscoveries() {
+            const newProduct = getProductByDepth(game.depth);
+            if (newProduct && !game.shownProductModals.includes(newProduct.id)) {
+                game.pendingProductModal = newProduct;
+            }
+        }
+        
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        function init() {
+            game.canvas = document.getElementById('game');
+            game.ctx = game.canvas.getContext('2d');
+            game.canvas.width = CONFIG.width;
+            game.canvas.height = CONFIG.height;
+            
+            // Load saved data
+            game.bestDepth = parseInt(localStorage.getItem('coreDropBest') || '0');
+            game.bestScore = parseInt(localStorage.getItem('coreDropBestScore') || '0');
+            game.leaderboard = JSON.parse(localStorage.getItem('coreDropLeaderboard') || '[]');
+            game.tutorialShown = localStorage.getItem('coreDropTutorial') === 'true';
+            
+            // Load unlocked bits
+            const savedBits = localStorage.getItem('coreDropBits');
+            if (savedBits) game.unlockedBits = JSON.parse(savedBits);
+            
+            // Load discovered products
+            loadDiscoveredProducts();
+            
+            // Find best unlocked bit
+            for (let i = game.unlockedBits.length - 1; i >= 0; i--) {
+                if (game.unlockedBits[i]) {
+                    game.currentBit = i;
+                    break;
+                }
+            }
+            
+            document.getElementById('highScore').textContent = game.bestScore;
+            
+            setupControls();
+            updateEquipmentPanel();
+            drawBackground();
+            
+            // Initialize audio on first interaction
+            document.addEventListener('touchstart', () => { audio.init(); audio.resume(); }, { once: true });
+            document.addEventListener('click', () => { audio.init(); audio.resume(); }, { once: true });
+        }
+        
+        // ============================================
+        // CONTROLS
+        // ============================================
+        function setupControls() {
+            const container = document.getElementById('gameContainer');
+            
+            // Touch controls
+            container.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                audio.resume();
+                if (game.running && !game.paused) {
+                    game.drilling = true;
+                    audio.startDrill();
+                    haptic('light');
+                }
+            }, { passive: false });
+            
+            container.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                game.drilling = false;
+                audio.stopDrill();
+            });
+            
+            container.addEventListener('touchcancel', (e) => {
+                game.drilling = false;
+                audio.stopDrill();
+            });
+            
+            // Mouse controls
+            container.addEventListener('mousedown', (e) => {
+                // Don't start drilling if clicking on UI elements
+                if (e.target.tagName === 'BUTTON') return;
+                if (game.running && !game.paused) {
+                    game.drilling = true;
+                    audio.startDrill();
+                }
+            });
+            container.addEventListener('mouseup', () => {
+                game.drilling = false;
+                audio.stopDrill();
+            });
+            container.addEventListener('mouseleave', () => {
+                game.drilling = false;
+                audio.stopDrill();
+            });
+            
+            // Buttons
+            document.getElementById('startBtn').addEventListener('click', () => {
+                audio.init();
+                audio.resume();
+                if (!game.tutorialShown) {
+                    showTutorial();
+                } else {
+                    startGame();
+                }
+            });
+            
+            document.getElementById('restartBtn').addEventListener('click', startGame);
+            document.getElementById('restartFromPause').addEventListener('click', () => {
+                closePauseMenu();
+                startGame();
+            });
+            
+            document.getElementById('pauseBtn').addEventListener('click', togglePause);
+            document.getElementById('resumeBtn').addEventListener('click', togglePause);
+            
+            document.getElementById('tutorialOk').addEventListener('click', () => {
+                document.getElementById('tutorial').style.display = 'none';
+                startGame();
+            });
+            
+            document.getElementById('skipTutorial').addEventListener('click', () => {
+                localStorage.setItem('coreDropTutorial', 'true');
+                game.tutorialShown = true;
+                document.getElementById('tutorial').style.display = 'none';
+                startGame();
+            });
+            
+            document.getElementById('shareBtn').addEventListener('click', shareScore);
+            
+            // Sound toggles
+            document.getElementById('soundToggle').addEventListener('click', toggleSound);
+            document.getElementById('pauseSoundToggle').addEventListener('click', toggleSound);
+            
+            // Shop buttons
+            document.getElementById('shopBtn').addEventListener('click', showShopPanel);
+            document.getElementById('pauseShopBtn').addEventListener('click', () => {
+                closePauseMenu();
+                showShopPanel();
+            });
+            document.getElementById('gameOverShopBtn').addEventListener('click', showShopPanel);
+            document.getElementById('shopCloseBtn').addEventListener('click', closeShopPanel);
+            
+            // Product modal buttons
+            document.getElementById('productLaterBtn').addEventListener('click', closeProductModal);
+            
+            // Keyboard
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space' && game.running && !game.paused) {
+                    e.preventDefault();
+                    game.drilling = true;
+                    audio.startDrill();
+                }
+                if (e.code === 'Escape') {
+                    if (document.getElementById('shopPanel').classList.contains('show')) {
+                        closeShopPanel();
+                    } else if (document.getElementById('productModal').classList.contains('show')) {
+                        closeProductModal();
+                    } else if (game.running) {
+                        togglePause();
+                    }
+                }
+            });
+            document.addEventListener('keyup', (e) => {
+                if (e.code === 'Space') {
+                    game.drilling = false;
+                    audio.stopDrill();
+                }
+            });
+        }
+        
+        function toggleSound() {
+            const enabled = audio.toggle();
+            const icon = enabled ? '🔊' : '🔇';
+            document.getElementById('soundToggle').textContent = icon;
+            document.getElementById('pauseSoundToggle').textContent = icon;
+        }
+        
+        function showTutorial() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('tutorial').style.display = 'flex';
+        }
+        
+        function togglePause() {
+            if (!game.running) return;
+            
+            game.paused = !game.paused;
+            
+            if (game.paused) {
+                audio.stopDrill();
+                audio.stopMusic();
+                document.getElementById('pauseMenu').style.display = 'flex';
+            } else {
+                closePauseMenu();
+                game.lastTime = performance.now();
+                requestAnimationFrame(gameLoop);
+                audio.startMusic();
+            }
+        }
+        
+        function closePauseMenu() {
+            game.paused = false;
+            document.getElementById('pauseMenu').style.display = 'none';
+        }
+        
+        // ============================================
+        // GAME START
+        // ============================================
+        function startGame() {
+            game.running = true;
+            game.paused = false;
+            game.drilling = false;
+            game.depth = 0;
+            game.score = 0;
+            game.baseScore = 0;
+            game.bonusScore = 0;
+            game.nearMissCount = 0;
+            game.combo = 0;
+            game.maxCombo = 0;
+            game.lastNearMissTime = 0;
+            game.difficulty = 1;
+            game.drill = { x: CONFIG.width / 2, y: 100, width: 30, height: 60, vy: 0 };
+            game.obstacles = [];
+            game.powerUps = [];
+            game.particles = [];
+            game.confetti = [];
+            game.slurry = [];
+            game.bonusPickups = [];
+            game.screenShake = 0;
+            game.shieldActive = false;
+            game.slowmoActive = false;
+            game.magnetActive = false;
+            game.pendingProductModal = null;
+            game.shownProductModals = [];
+            
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('tutorial').style.display = 'none';
+            document.getElementById('pauseBtn').style.display = 'block';
+            
+            updatePowerUpIcons();
+            
+            audio.startMusic();
+            game.lastTime = performance.now();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // ============================================
+        // GAME LOOP
+        // ============================================
+        function gameLoop(timestamp) {
+            if (!game.running || game.paused) return;
+            
+            let dt = Math.min((timestamp - game.lastTime) / 16.67, 3);
+            game.lastTime = timestamp;
+            
+            // Slow-mo effect
+            if (game.slowmoActive) {
+                dt *= 0.4;
+            }
+            
+            update(dt, timestamp);
+            render();
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // ============================================
+        // UPDATE
+        // ============================================
+        function update(dt, timestamp) {
+            const bit = CONFIG.bits[game.currentBit];
+            
+            // Increase difficulty over time
+            game.difficulty = 1 + (game.depth * CONFIG.difficultyScale);
+            
+            // Combo decay
+            if (game.combo > 0 && timestamp - game.lastNearMissTime > CONFIG.comboWindow) {
+                game.combo = 0;
+                updateComboDisplay();
+            }
+            
+            // Power-up timers
+            if (game.shieldActive) {
+                game.shieldTimer -= dt * 16.67;
+                if (game.shieldTimer <= 0) {
+                    game.shieldActive = false;
+                    updatePowerUpIcons();
+                }
+            }
+            if (game.slowmoActive) {
+                game.slowmoTimer -= 16.67; // Real time, not dt-adjusted
+                if (game.slowmoTimer <= 0) {
+                    game.slowmoActive = false;
+                    updatePowerUpIcons();
+                }
+            }
+            if (game.magnetActive) {
+                game.magnetTimer -= dt * 16.67;
+                if (game.magnetTimer <= 0) {
+                    game.magnetActive = false;
+                    updatePowerUpIcons();
+                }
+            }
+            
+            // Drill movement
+            if (game.drilling) {
+                game.drill.vy = Math.min(game.drill.vy + 0.3 * dt, CONFIG.maxDrillSpeed * bit.speed);
+            } else {
+                game.drill.vy = Math.max(game.drill.vy - 0.2 * dt, 0);
+            }
+            
+            // Update depth and base score
+            if (game.drill.vy > 0) {
+                const depthGain = game.drill.vy * CONFIG.depthPerPixel * dt;
+                game.depth += depthGain;
+                game.baseScore += Math.floor(depthGain * 10);
+                
+                // Spawn slurry
+                if (Math.random() < 0.4) {
+                    game.slurry.push({
+                        x: game.drill.x + (Math.random() - 0.5) * game.drill.width,
+                        y: game.drill.y + game.drill.height,
+                        vx: (Math.random() - 0.5) * 4,
+                        vy: -Math.random() * 3 - 1,
+                        life: 40,
+                        size: 2 + Math.random() * 3,
+                        color: Math.random() > 0.5 ? '#8ecae6' : '#6b7280'
+                    });
+                }
+            }
+            
+            // Calculate total score
+            game.score = game.baseScore + game.bonusScore;
+            
+            // Spawn obstacles (increasing with difficulty)
+            const obstacleRate = CONFIG.obstacleSpawnRate * Math.min(game.difficulty, 2.5);
+            if (Math.random() < obstacleRate * dt) {
+                spawnObstacle();
+            }
+            
+            // Spawn power-ups
+            if (Math.random() < CONFIG.powerUpSpawnRate * dt) {
+                spawnPowerUp();
+            }
+            
+            // Spawn bonus pickups
+            if (Math.random() < 0.005 * dt) {
+                spawnBonusPickup();
+            }
+            
+            // Update obstacles
+            const obstacleSpeed = game.drill.vy * dt * game.difficulty;
+            for (let i = game.obstacles.length - 1; i >= 0; i--) {
+                const obs = game.obstacles[i];
+                obs.y -= obstacleSpeed;
+                
+                // Remove off-screen
+                if (obs.y < -50) {
+                    // Check near miss
+                    const dist = Math.abs(obs.x - game.drill.x);
+                    if (dist < CONFIG.nearMissDistance + obs.width / 2 + game.drill.width / 2) {
+                        triggerNearMiss(obs, timestamp);
+                    }
+                    game.obstacles.splice(i, 1);
+                    continue;
+                }
+                
+                // Collision
+                if (checkCollision(game.drill, obs)) {
+                    if (game.shieldActive) {
+                        // Shield absorbs hit
+                        game.shieldActive = false;
+                        updatePowerUpIcons();
+                        game.obstacles.splice(i, 1);
+                        triggerFlash('powerup');
+                        haptic('medium');
+                        spawnExplosion(obs.x, obs.y, obs.color, 15);
+                    } else {
+                        gameOver(obs.type);
+                        return;
+                    }
+                }
+            }
+            
+            // Update power-ups
+            for (let i = game.powerUps.length - 1; i >= 0; i--) {
+                const pu = game.powerUps[i];
+                pu.y -= game.drill.vy * dt;
+                pu.bobPhase += 0.1;
+                
+                if (pu.y < -50) {
+                    game.powerUps.splice(i, 1);
+                    continue;
+                }
+                
+                // Magnet attraction
+                if (game.magnetActive) {
+                    const dx = game.drill.x - pu.x;
+                    const dy = (game.drill.y + game.drill.height / 2) - pu.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 150) {
+                        pu.x += (dx / dist) * 5 * dt;
+                        pu.y += (dy / dist) * 5 * dt;
+                    }
+                }
+                
+                // Collect power-up
+                if (checkPowerUpCollision(game.drill, pu)) {
+                    activatePowerUp(pu.type);
+                    game.powerUps.splice(i, 1);
+                }
+            }
+            
+            // Update bonus pickups
+            for (let i = game.bonusPickups.length - 1; i >= 0; i--) {
+                const bp = game.bonusPickups[i];
+                bp.y -= game.drill.vy * dt;
+                bp.bobPhase += 0.15;
+                
+                if (bp.y < -50) {
+                    game.bonusPickups.splice(i, 1);
+                    continue;
+                }
+                
+                // Magnet attraction
+                if (game.magnetActive) {
+                    const dx = game.drill.x - bp.x;
+                    const dy = (game.drill.y + game.drill.height / 2) - bp.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 150) {
+                        bp.x += (dx / dist) * 6 * dt;
+                        bp.y += (dy / dist) * 6 * dt;
+                    }
+                }
+                
+                // Collect
+                if (checkPowerUpCollision(game.drill, bp)) {
+                    game.bonusScore += bp.value;
+                    showFloatingText(bp.x, bp.y, '+' + bp.value, '#ffd700');
+                    audio.playNearMiss();
+                    haptic('light');
+                    game.bonusPickups.splice(i, 1);
+                }
+            }
+            
+            // Update slurry
+            for (let i = game.slurry.length - 1; i >= 0; i--) {
+                const s = game.slurry[i];
+                s.x += s.vx * dt;
+                s.y += s.vy * dt;
+                s.vy += 0.15 * dt;
+                s.life -= dt;
+                if (s.life <= 0) game.slurry.splice(i, 1);
+            }
+            
+            // Update particles
+            for (let i = game.particles.length - 1; i >= 0; i--) {
+                const p = game.particles[i];
+                p.x += p.vx * dt;
+                p.y += p.vy * dt;
+                if (p.gravity) p.vy += 0.2 * dt;
+                p.life -= dt;
+                if (p.rotation !== undefined) p.rotation += p.rotSpeed * dt;
+                if (p.life <= 0) game.particles.splice(i, 1);
+            }
+            
+            // Update confetti
+            for (let i = game.confetti.length - 1; i >= 0; i--) {
+                const c = game.confetti[i];
+                c.x += c.vx * dt;
+                c.y += c.vy * dt;
+                c.vy += 0.1 * dt;
+                c.rotation += c.rotSpeed * dt;
+                c.life -= dt;
+                if (c.life <= 0) game.confetti.splice(i, 1);
+            }
+            
+            // Screen shake decay
+            game.screenShake *= 0.9;
+            
+            // Update UI
+            document.getElementById('depth').textContent = Math.floor(game.depth);
+            document.getElementById('score').textContent = game.score;
+            document.getElementById('bitDisplay').textContent = bit.name;
+            
+            // Check for bit unlocks
+            checkUnlocks();
+            
+            // Check for product discoveries
+            checkProductDiscoveries();
+        }
+        
+        // ============================================
+        // SPAWNING
+        // ============================================
+        function spawnObstacle() {
+            const types = ['rebar', 'pipe', 'rock'];
+            const weights = [0.4, 0.35, 0.25];
+            let r = Math.random();
+            let type = types[0];
+            for (let i = 0; i < weights.length; i++) {
+                if (r < weights[i]) { type = types[i]; break; }
+                r -= weights[i];
+            }
+            
+            let obs = {
+                type: type,
+                x: Math.random() * (CONFIG.width - 100) + 50,
+                y: CONFIG.height + 50
+            };
+            
+            const diffScale = Math.min(game.difficulty, 2);
+            
+            switch(type) {
+                case 'rebar':
+                    obs.width = 60 + Math.random() * 50 * diffScale;
+                    obs.height = 8;
+                    obs.color = '#dc3545';
+                    break;
+                case 'pipe':
+                    obs.width = 25 + Math.random() * 25;
+                    obs.height = obs.width;
+                    obs.color = '#4dabf7';
+                    break;
+                case 'rock':
+                    obs.width = 35 + Math.random() * 35;
+                    obs.height = 25 + Math.random() * 25;
+                    obs.color = '#a0522d';
+                    break;
+            }
+            
+            game.obstacles.push(obs);
+        }
+        
+        function spawnPowerUp() {
+            const types = CONFIG.powerUps;
+            const type = types[Math.floor(Math.random() * types.length)];
+            
+            game.powerUps.push({
+                type: type,
+                x: Math.random() * (CONFIG.width - 80) + 40,
+                y: CONFIG.height + 30,
+                size: 25,
+                bobPhase: Math.random() * Math.PI * 2
+            });
+        }
+        
+        function spawnBonusPickup() {
+            const values = [25, 50, 100];
+            const value = values[Math.floor(Math.random() * values.length)];
+            
+            game.bonusPickups.push({
+                x: Math.random() * (CONFIG.width - 60) + 30,
+                y: CONFIG.height + 20,
+                size: 15,
+                value: value,
+                bobPhase: Math.random() * Math.PI * 2
+            });
+        }
+        
+        // ============================================
+        // COLLISION
+        // ============================================
+        function checkCollision(drill, obs) {
+            const drillLeft = drill.x - drill.width / 2;
+            const drillRight = drill.x + drill.width / 2;
+            const drillTop = drill.y;
+            const drillBottom = drill.y + drill.height;
+            
+            if (obs.type === 'pipe') {
+                const cx = obs.x;
+                const cy = obs.y;
+                const r = obs.width / 2;
+                const closestX = Math.max(drillLeft, Math.min(cx, drillRight));
+                const closestY = Math.max(drillTop, Math.min(cy, drillBottom));
+                const dx = cx - closestX;
+                const dy = cy - closestY;
+                return (dx * dx + dy * dy) < (r * r);
+            } else {
+                const obsLeft = obs.x - obs.width / 2;
+                const obsRight = obs.x + obs.width / 2;
+                const obsTop = obs.y - obs.height / 2;
+                const obsBottom = obs.y + obs.height / 2;
+                return !(drillRight < obsLeft || drillLeft > obsRight ||
+                         drillBottom < obsTop || drillTop > obsBottom);
+            }
+        }
+        
+        function checkPowerUpCollision(drill, pu) {
+            const dx = drill.x - pu.x;
+            const dy = (drill.y + drill.height / 2) - pu.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            return dist < (drill.width / 2 + pu.size);
+        }
+        
+        // ============================================
+        // POWER-UPS
+        // ============================================
+        function activatePowerUp(type) {
+            audio.playPowerUp();
+            haptic('success');
+            triggerFlash('powerup');
+            
+            switch(type) {
+                case 'shield':
+                    game.shieldActive = true;
+                    game.shieldTimer = 8000;
+                    break;
+                case 'slowmo':
+                    game.slowmoActive = true;
+                    game.slowmoTimer = 5000;
+                    break;
+                case 'magnet':
+                    game.magnetActive = true;
+                    game.magnetTimer = 10000;
+                    break;
+            }
+            
+            updatePowerUpIcons();
+            showFloatingText(game.drill.x, game.drill.y - 20, getPowerUpName(type), '#ffd700');
+        }
+        
+        function getPowerUpName(type) {
+            switch(type) {
+                case 'shield': return '🛡️ SHIELD!';
+                case 'slowmo': return '⏱️ SLOW-MO!';
+                case 'magnet': return '🧲 MAGNET!';
+            }
+        }
+        
+        function updatePowerUpIcons() {
+            document.getElementById('shieldIcon').classList.toggle('active', game.shieldActive);
+            document.getElementById('slowmoIcon').classList.toggle('active', game.slowmoActive);
+            document.getElementById('magnetIcon').classList.toggle('active', game.magnetActive);
+        }
+        
+        // ============================================
+        // COMBO SYSTEM
+        // ============================================
+        function triggerNearMiss(obs, timestamp) {
+            game.nearMissCount++;
+            
+            // Update combo
+            if (timestamp - game.lastNearMissTime < CONFIG.comboWindow) {
+                game.combo++;
+            } else {
+                game.combo = 1;
+            }
+            game.lastNearMissTime = timestamp;
+            game.maxCombo = Math.max(game.maxCombo, game.combo);
+            
+            // Score with combo multiplier
+            const points = 50 * game.combo;
+            game.bonusScore += points;
+            
+            // Effects
+            audio.playNearMiss();
+            if (game.combo >= 2) {
+                audio.playCombo(game.combo);
+            }
+            haptic('light');
+            
+            // Show near miss text
+            const text = game.combo > 1 ? `COMBO x${game.combo}! +${points}` : 'NEAR MISS! +50';
+            showFloatingText(obs.x, obs.y + 60, text, game.combo > 1 ? '#ff6b35' : '#00ff88');
+            
+            updateComboDisplay();
+        }
+        
+        function updateComboDisplay() {
+            const display = document.getElementById('comboDisplay');
+            if (game.combo >= 2) {
+                document.getElementById('comboMultiplier').textContent = game.combo;
+                display.classList.add('active');
+            } else {
+                display.classList.remove('active');
+            }
+        }
+        
+        // ============================================
+        // UNLOCKS
+        // ============================================
+        function checkUnlocks() {
+            for (let i = 1; i < CONFIG.bits.length; i++) {
+                if (!game.unlockedBits[i] && game.depth >= CONFIG.bits[i].depth) {
+                    game.unlockedBits[i] = true;
+                    game.currentBit = i;
+                    localStorage.setItem('coreDropBits', JSON.stringify(game.unlockedBits));
+                    showUnlock(CONFIG.bits[i], i);
+                }
+            }
+        }
+        
+        function showUnlock(bit, bitIndex) {
+            const unlock = document.getElementById('unlock');
+            document.getElementById('bitName').textContent = '⚡ ' + bit.name + ' ⚡';
+            unlock.classList.add('show');
+            game.screenShake = 15;
+            
+            audio.playUnlock();
+            haptic('success');
+            
+            // Massive confetti explosion
+            spawnConfetti(80);
+            
+            // Celebration particles
+            for (let i = 0; i < 50; i++) {
+                const angle = (i / 50) * Math.PI * 2;
+                game.particles.push({
+                    x: CONFIG.width / 2,
+                    y: CONFIG.height / 2,
+                    vx: Math.cos(angle) * (5 + Math.random() * 10),
+                    vy: Math.sin(angle) * (5 + Math.random() * 10),
+                    life: 80,
+                    size: 4 + Math.random() * 4,
+                    color: ['#ffd700', '#ff8c00', '#ff6347', '#00ff88'][Math.floor(Math.random() * 4)]
+                });
+            }
+            
+            // Check for product to show after unlock animation
+            const product = getProductByBitIndex(bitIndex);
+            if (product && !game.shownProductModals.includes(product.id)) {
+                game.pendingProductModal = product;
+            }
+            
+            setTimeout(() => {
+                unlock.classList.remove('show');
+                
+                // Show product modal after unlock animation finishes
+                if (game.pendingProductModal) {
+                    setTimeout(() => {
+                        showProductModal(game.pendingProductModal);
+                    }, 300);
+                }
+            }, 3000);
+        }
+        
+        // ============================================
+        // VISUAL EFFECTS
+        // ============================================
+        function triggerFlash(type) {
+            const overlay = document.getElementById('flashOverlay');
+            overlay.className = 'flash-overlay ' + type;
+            setTimeout(() => overlay.className = 'flash-overlay', 300);
+        }
+        
+        function showFloatingText(x, y, text, color) {
+            const elem = document.createElement('div');
+            elem.className = 'near-miss';
+            elem.textContent = text;
+            elem.style.left = (x / CONFIG.width * 100) + '%';
+            elem.style.top = (y / CONFIG.height * 100) + '%';
+            elem.style.color = color;
+            document.getElementById('gameContainer').appendChild(elem);
+            setTimeout(() => elem.remove(), 1000);
+        }
+        
+        function spawnExplosion(x, y, color, count) {
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 3 + Math.random() * 6;
+                game.particles.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 40,
+                    size: 3 + Math.random() * 4,
+                    color: color,
+                    gravity: true
+                });
+            }
+        }
+        
+        function spawnConfetti(count) {
+            const colors = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#95e1d3', '#f38181', '#aa96da', '#fcbad3'];
+            for (let i = 0; i < count; i++) {
+                game.confetti.push({
+                    x: CONFIG.width / 2 + (Math.random() - 0.5) * 100,
+                    y: CONFIG.height / 2,
+                    vx: (Math.random() - 0.5) * 15,
+                    vy: -10 - Math.random() * 10,
+                    life: 150,
+                    width: 8 + Math.random() * 8,
+                    height: 5 + Math.random() * 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rotation: Math.random() * Math.PI * 2,
+                    rotSpeed: (Math.random() - 0.5) * 0.3
+                });
+            }
+        }
+        
+        // ============================================
+        // GAME OVER
+        // ============================================
+        function gameOver(hitType) {
+            game.running = false;
+            game.drilling = false;
+            game.screenShake = 25;
+            
+            audio.stopDrill();
+            audio.stopMusic();
+            audio.playCollision();
+            haptic('collision');
+            triggerFlash('hit');
+            
+            // Save best depth
+            if (game.depth > game.bestDepth) {
+                game.bestDepth = Math.floor(game.depth);
+                localStorage.setItem('coreDropBest', game.bestDepth);
+            }
+            
+            // Save best score
+            if (game.score > game.bestScore) {
+                game.bestScore = game.score;
+                localStorage.setItem('coreDropBestScore', game.bestScore);
+                document.getElementById('highScore').textContent = game.bestScore;
+            }
+            
+            // Update leaderboard
+            updateLeaderboard(game.score);
+            
+            // Explosion
+            spawnExplosion(game.drill.x, game.drill.y + game.drill.height, '#ff6347', 30);
+            
+            // Render explosion frame
+            render();
+            
+            // Show game over
+            setTimeout(() => {
+                const messages = {
+                    rebar: 'Hit reinforced rebar! 🔴',
+                    pipe: 'Struck a utility pipe! 🔵',
+                    rock: 'Hard rock destroyed your bit! 🟤'
+                };
+                document.getElementById('hitMessage').textContent = messages[hitType];
+                document.getElementById('finalScore').textContent = game.score;
+                document.getElementById('finalDepth').textContent = Math.floor(game.depth);
+                document.getElementById('nearMisses').textContent = game.nearMissCount;
+                document.getElementById('bestCombo').textContent = game.maxCombo;
+                document.getElementById('nearMissBonus').textContent = game.bonusScore;
+                document.getElementById('pauseBtn').style.display = 'none';
+                document.getElementById('gameOver').style.display = 'flex';
+                
+                renderLeaderboard();
+                
+                // Show product modal if there's a pending one discovered during gameplay
+                if (game.pendingProductModal) {
+                    setTimeout(() => {
+                        showProductModal(game.pendingProductModal);
+                    }, 500);
+                }
+            }, 600);
+        }
+        
+        // ============================================
+        // LEADERBOARD
+        // ============================================
+        function updateLeaderboard(score) {
+            const entry = {
+                score: score,
+                depth: Math.floor(game.depth),
+                date: new Date().toLocaleDateString()
+            };
+            
+            game.leaderboard.push(entry);
+            game.leaderboard.sort((a, b) => b.score - a.score);
+            game.leaderboard = game.leaderboard.slice(0, 10);
+            
+            localStorage.setItem('coreDropLeaderboard', JSON.stringify(game.leaderboard));
+        }
+        
+        function renderLeaderboard() {
+            const list = document.getElementById('leaderboardList');
+            list.innerHTML = '';
+            
+            game.leaderboard.forEach((entry, i) => {
+                const div = document.createElement('div');
+                div.className = 'leaderboard-entry';
+                if (entry.score === game.score) div.classList.add('highlight');
+                
+                const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1) + '.';
+                div.innerHTML = `<span>${medal} ${entry.score}</span><span>${entry.depth}m</span>`;
+                list.appendChild(div);
+            });
+        }
+        
+        // ============================================
+        // SHARE
+        // ============================================
+        function shareScore() {
+            const text = `⚙️ CORE DROP by DMI Tools ⚙️\n\n` +
+                         `I drilled ${Math.floor(game.depth)}m deep and scored ${game.score} points!\n\n` +
+                         `🛠️ Bit: ${CONFIG.bits[game.currentBit].name}\n` +
+                         `🔥 Best Combo: ${game.maxCombo}x\n` +
+                         `🎯 Near Misses: ${game.nearMissCount}\n\n` +
+                         `Can you drill deeper? 🚀\n\n` +
+                         `#CoreDrop #DMITools`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Core Drop - DMI Tools',
+                    text: text
+                }).catch(console.log);
+            } else {
+                navigator.clipboard.writeText(text).then(() => {
+                    const btn = document.getElementById('shareBtn');
+                    btn.textContent = '✅ COPIED!';
+                    setTimeout(() => btn.textContent = '📤 SHARE SCORE', 2000);
+                });
+            }
+        }
+        
+        // ============================================
+        // EQUIPMENT PANEL
+        // ============================================
+        function updateEquipmentPanel() {
+            const list = document.getElementById('bitList');
+            list.innerHTML = '';
+            
+            CONFIG.bits.forEach((bit, i) => {
+                const div = document.createElement('div');
+                div.className = 'bit-item';
+                if (game.unlockedBits[i]) div.classList.add('unlocked');
+                if (i === game.currentBit) div.classList.add('current');
+                
+                div.innerHTML = `
+                    <div class="bit-color" style="background:${game.unlockedBits[i] ? bit.color : '#333'}"></div>
+                    <div>
+                        <strong>${game.unlockedBits[i] ? bit.name : '???'}</strong>
+                        <div class="bit-stats">${game.unlockedBits[i] ? bit.desc : `Unlock at ${bit.depth}m`}</div>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+        
+        // ============================================
+        // RENDER
+        // ============================================
+        function render() {
+            const ctx = game.ctx;
+            
+            ctx.save();
+            
+            // Screen shake
+            if (game.screenShake > 0) {
+                ctx.translate(
+                    (Math.random() - 0.5) * game.screenShake,
+                    (Math.random() - 0.5) * game.screenShake
+                );
+            }
+            
+            // Background
+            drawBackground();
+            
+            // Depth markers
+            drawDepthMarkers();
+            
+            // DMI Tools watermark
+            ctx.save();
+            ctx.globalAlpha = 0.08;
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 40px Courier New';
+            ctx.textAlign = 'center';
+            ctx.fillText('DMI TOOLS', CONFIG.width / 2, CONFIG.height / 2);
+            ctx.font = '16px Courier New';
+            ctx.fillText('Professional Drilling', CONFIG.width / 2, CONFIG.height / 2 + 30);
+            ctx.restore();
+            
+            // Slurry
+            game.slurry.forEach(s => {
+                ctx.fillStyle = s.color;
+                ctx.globalAlpha = s.life / 40;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+            
+            // Power-ups
+            game.powerUps.forEach(pu => {
+                const bobY = Math.sin(pu.bobPhase) * 5;
+                ctx.save();
+                ctx.translate(pu.x, pu.y + bobY);
+                
+                // Glow
+                ctx.shadowColor = pu.type === 'shield' ? '#00c8ff' : pu.type === 'slowmo' ? '#ff64ff' : '#ffd700';
+                ctx.shadowBlur = 15;
+                
+                // Background circle
+                ctx.beginPath();
+                ctx.arc(0, 0, pu.size, 0, Math.PI * 2);
+                ctx.fillStyle = ctx.shadowColor + '44';
+                ctx.fill();
+                
+                // Icon
+                ctx.font = `${pu.size}px sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(pu.type === 'shield' ? '🛡️' : pu.type === 'slowmo' ? '⏱️' : '🧲', 0, 2);
+                
+                ctx.restore();
+            });
+            
+            // Bonus pickups
+            game.bonusPickups.forEach(bp => {
+                const bobY = Math.sin(bp.bobPhase) * 3;
+                ctx.save();
+                ctx.translate(bp.x, bp.y + bobY);
+                
+                ctx.shadowColor = '#ffd700';
+                ctx.shadowBlur = 10;
+                
+                ctx.beginPath();
+                ctx.arc(0, 0, bp.size, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffd70088';
+                ctx.fill();
+                
+                ctx.font = 'bold 10px Courier New';
+                ctx.fillStyle = '#fff';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowBlur = 0;
+                ctx.fillText('$', 0, 1);
+                
+                ctx.restore();
+            });
+            
+            // Obstacles
+            game.obstacles.forEach(obs => {
+                ctx.save();
+                
+                if (obs.type === 'pipe') {
+                    // Pipe with 3D effect
+                    const gradient = ctx.createRadialGradient(obs.x - obs.width/4, obs.y - obs.width/4, 0, obs.x, obs.y, obs.width/2);
+                    gradient.addColorStop(0, '#74c0fc');
+                    gradient.addColorStop(0.5, obs.color);
+                    gradient.addColorStop(1, '#1971c2');
+                    
+                    ctx.beginPath();
+                    ctx.arc(obs.x, obs.y, obs.width / 2, 0, Math.PI * 2);
+                    ctx.fillStyle = gradient;
+                    ctx.fill();
+                    
+                    // Inner hole
+                    ctx.beginPath();
+                    ctx.arc(obs.x, obs.y, obs.width / 3, 0, Math.PI * 2);
+                    ctx.fillStyle = '#1864ab';
+                    ctx.fill();
+                    
+                } else if (obs.type === 'rebar') {
+                    // Rebar with ridges
+                    ctx.fillStyle = obs.color;
+                    ctx.fillRect(obs.x - obs.width/2, obs.y - obs.height/2, obs.width, obs.height);
+                    
+                    // Ridges
+                    ctx.fillStyle = '#a5292a';
+                    for (let i = 0; i < obs.width; i += 10) {
+                        ctx.fillRect(obs.x - obs.width/2 + i, obs.y - obs.height/2 - 3, 5, obs.height + 6);
+                    }
+                    
+                    // Highlight
+                    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                    ctx.fillRect(obs.x - obs.width/2, obs.y - obs.height/2, obs.width, 2);
+                    
+                } else {
+                    // Rock with texture
+                    ctx.fillStyle = obs.color;
+                    ctx.beginPath();
+                    ctx.moveTo(obs.x - obs.width/2, obs.y);
+                    ctx.lineTo(obs.x - obs.width/3, obs.y - obs.height/2);
+                    ctx.lineTo(obs.x + obs.width/3, obs.y - obs.height/2);
+                    ctx.lineTo(obs.x + obs.width/2, obs.y);
+                    ctx.lineTo(obs.x + obs.width/3, obs.y + obs.height/2);
+                    ctx.lineTo(obs.x - obs.width/3, obs.y + obs.height/2);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    // Texture
+                    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                    ctx.fillRect(obs.x - 5, obs.y - 3, 10, 6);
+                    ctx.fillRect(obs.x + 8, obs.y + 5, 6, 4);
+                }
+                
+                ctx.restore();
+            });
+            
+            // Drill
+            drawDrill();
+            
+            // Particles
+            game.particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = Math.min(1, p.life / 30);
+                if (p.rotation !== undefined) {
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rotation);
+                    ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                    ctx.restore();
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+            ctx.globalAlpha = 1;
+            
+            // Confetti
+            game.confetti.forEach(c => {
+                ctx.save();
+                ctx.translate(c.x, c.y);
+                ctx.rotate(c.rotation);
+                ctx.fillStyle = c.color;
+                ctx.globalAlpha = Math.min(1, c.life / 50);
+                ctx.fillRect(-c.width/2, -c.height/2, c.width, c.height);
+                ctx.restore();
+            });
+            ctx.globalAlpha = 1;
+            
+            // Drilling indicator
+            if (game.drilling && game.running) {
+                ctx.fillStyle = '#ffd700';
+                ctx.font = 'bold 16px Courier New';
+                ctx.textAlign = 'center';
+                ctx.shadowColor = '#ffd700';
+                ctx.shadowBlur = 10;
+                ctx.fillText('⚡ DRILLING ⚡', CONFIG.width / 2, 35);
+                ctx.shadowBlur = 0;
+            }
+            
+            // Slow-mo overlay
+            if (game.slowmoActive) {
+                ctx.fillStyle = 'rgba(255, 100, 255, 0.1)';
+                ctx.fillRect(0, 0, CONFIG.width, CONFIG.height);
+            }
+            
+            ctx.restore();
+        }
+        
+        // ============================================
+        // BACKGROUND
+        // ============================================
+        function drawBackground() {
+            const ctx = game.ctx;
+            const depthOffset = (game.depth * 100) % 60;
+            
+            // Gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, CONFIG.height);
+            gradient.addColorStop(0, '#3d3d3d');
+            gradient.addColorStop(0.3, '#4a4a4a');
+            gradient.addColorStop(0.7, '#3a3a3a');
+            gradient.addColorStop(1, '#2d2d2d');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, CONFIG.width, CONFIG.height);
+            
+            // Concrete layers
+            ctx.fillStyle = 'rgba(100, 100, 100, 0.25)';
+            for (let y = -depthOffset; y < CONFIG.height; y += 60) {
+                ctx.fillRect(0, y, CONFIG.width, 2);
+            }
+            
+            // Aggregate texture
+            ctx.fillStyle = 'rgba(70, 70, 70, 0.4)';
+            const seed = Math.floor(game.depth / 15);
+            for (let i = 0; i < 60; i++) {
+                const px = ((seed * 17 + i * 31) % CONFIG.width);
+                const py = ((seed * 23 + i * 41) % CONFIG.height);
+                const size = 2 + (i % 3);
+                ctx.fillRect(px, py, size, size);
+            }
+            
+            // Side walls
+            const wallGradient = ctx.createLinearGradient(0, 0, 30, 0);
+            wallGradient.addColorStop(0, 'rgba(30,30,30,0.8)');
+            wallGradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = wallGradient;
+            ctx.fillRect(0, 0, 30, CONFIG.height);
+            
+            const wallGradient2 = ctx.createLinearGradient(CONFIG.width, 0, CONFIG.width - 30, 0);
+            wallGradient2.addColorStop(0, 'rgba(30,30,30,0.8)');
+            wallGradient2.addColorStop(1, 'transparent');
+            ctx.fillStyle = wallGradient2;
+            ctx.fillRect(CONFIG.width - 30, 0, 30, CONFIG.height);
+        }
+        
+        // ============================================
+        // DEPTH MARKERS
+        // ============================================
+        function drawDepthMarkers() {
+            const ctx = game.ctx;
+            ctx.fillStyle = '#ffd700';
+            ctx.font = 'bold 11px Courier New';
+            ctx.textAlign = 'right';
+            
+            const startDepth = Math.floor(game.depth / 10) * 10;
+            for (let d = startDepth; d < startDepth + 120; d += 10) {
+                const y = CONFIG.height - ((d - game.depth) * 8);
+                if (y > 60 && y < CONFIG.height - 30) {
+                    ctx.globalAlpha = 0.6;
+                    ctx.fillText(d + 'm', CONFIG.width - 15, y);
+                    ctx.fillRect(CONFIG.width - 12, y - 1, 8, 2);
+                    ctx.globalAlpha = 1;
+                }
+            }
+        }
+        
+        // ============================================
+        // DRAW DRILL
+        // ============================================
+        function drawDrill() {
+            const ctx = game.ctx;
+            const d = game.drill;
+            const bit = CONFIG.bits[game.currentBit];
+            
+            ctx.save();
+            
+            // Shield effect
+            if (game.shieldActive) {
+                ctx.beginPath();
+                ctx.arc(d.x, d.y + d.height/2, d.width + 15, 0, Math.PI * 2);
+                ctx.strokeStyle = '#00c8ff';
+                ctx.lineWidth = 3;
+                ctx.shadowColor = '#00c8ff';
+                ctx.shadowBlur = 20;
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+            
+            // Drill body
+            ctx.fillStyle = '#333';
+            ctx.fillRect(d.x - 16, d.y, 32, 28);
+            
+            // Motor housing (yellow/orange - DMI colors)
+            const motorGrad = ctx.createLinearGradient(d.x - 13, 0, d.x + 13, 0);
+            motorGrad.addColorStop(0, '#ff8c00');
+            motorGrad.addColorStop(0.5, '#ffd700');
+            motorGrad.addColorStop(1, '#ff8c00');
+            ctx.fillStyle = motorGrad;
+            ctx.fillRect(d.x - 13, d.y + 5, 26, 18);
+            
+            // DMI logo on drill
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 8px Courier New';
+            ctx.textAlign = 'center';
+            ctx.fillText('DMI', d.x, d.y + 16);
+            
+            // Shaft
+            ctx.fillStyle = '#555';
+            ctx.fillRect(d.x - 9, d.y + 28, 18, 18);
+            
+            // Bit (colored)
+            const bitGrad = ctx.createLinearGradient(d.x - 11, 0, d.x + 11, 0);
+            bitGrad.addColorStop(0, shadeColor(bit.color, -30));
+            bitGrad.addColorStop(0.5, bit.color);
+            bitGrad.addColorStop(1, shadeColor(bit.color, -30));
+            ctx.fillStyle = bitGrad;
+            
+            ctx.beginPath();
+            ctx.moveTo(d.x - 11, d.y + 46);
+            ctx.lineTo(d.x + 11, d.y + 46);
+            ctx.lineTo(d.x + 7, d.y + 62);
+            ctx.lineTo(d.x - 7, d.y + 62);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Bit tip
+            ctx.beginPath();
+            ctx.moveTo(d.x - 7, d.y + 62);
+            ctx.lineTo(d.x + 7, d.y + 62);
+            ctx.lineTo(d.x, d.y + 72);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Spiral grooves
+            ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+            ctx.lineWidth = 2;
+            const spiralOffset = game.drilling ? (Date.now() / 30) % 8 : 0;
+            for (let i = 0; i < 3; i++) {
+                const sy = d.y + 48 + i * 6 + spiralOffset % 6;
+                ctx.beginPath();
+                ctx.moveTo(d.x - 9, sy);
+                ctx.lineTo(d.x + 9, sy + 4);
+                ctx.stroke();
+            }
+            
+            // Water line
+            ctx.strokeStyle = '#8ecae6';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(d.x + 16, d.y + 12);
+            ctx.quadraticCurveTo(d.x + 28, d.y + 32, d.x + 11, d.y + 48);
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+        
+        function shadeColor(color, percent) {
+            const num = parseInt(color.replace('#', ''), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = Math.min(255, Math.max(0, (num >> 16) + amt));
+            const G = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amt));
+            const B = Math.min(255, Math.max(0, (num & 0x0000FF) + amt));
+            return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+        }
+        
+        // ============================================
+        // INIT
+        // ============================================
+        window.onload = init;
+    </script>
+</body>
+</html>
