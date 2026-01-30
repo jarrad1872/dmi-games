@@ -1,0 +1,16 @@
+{
+  "id": "flappy",
+  "name": "Flappy Bird Clone",
+  "description": "Classic tap-to-fly arcade game. Navigate through obstacles and collect bonuses!",
+  "category": "arcade",
+  "icon": "🐦",
+  "difficulty": "easy",
+  "features": [
+    "Tap/click to fly",
+    "Procedural obstacles",
+    "Score tracking",
+    "High score persistence",
+    "Collectible stars"
+  ],
+  "tags": ["arcade", "casual", "mobile-friendly", "quick-play"]
+}

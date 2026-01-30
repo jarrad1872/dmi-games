@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>{{TITLE}} | DMI Tools</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      background: {{BG_COLOR}}; 
+      overflow: hidden;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      touch-action: manipulation;
+    }
+    #game-container { 
+      width: 100vw; 
+      height: 100vh; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center;
+    }
+    canvas { max-width: 100%; max-height: 100%; }
+    .cta-button {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, {{PRIMARY_COLOR}} 0%, {{SECONDARY_COLOR}} 100%);
+      color: white;
+      padding: 14px 36px;
+      border-radius: 30px;
+      font-weight: 700;
+      text-decoration: none;
+      font-size: 16px;
+      z-index: 1000;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      transition: all 0.3s ease;
+    }
+    .cta-button:hover { transform: translateX(-50%) translateY(-2px) scale(1.02); }
+    .branding {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,0,0,0.4);
+      padding: 8px 14px;
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+    }
+    .branding-icon {
+      width: 24px;
+      height: 24px;
+      background: linear-gradient(135deg, {{PRIMARY_COLOR}}, {{SECONDARY_COLOR}});
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container"></div>
+  {{#SHOW_BRANDING}}
+  <div class="branding">
+    <div class="branding-icon"></div>
+    <span>DMI Tools Corp</span>
+  </div>
+  {{/SHOW_BRANDING}}
+  <a href="{{CTA_URL}}" target="_blank" rel="noopener" class="cta-button">{{CTA_TEXT}}</a>
+  
+  <script>
+    const CONFIG = {
+      title: '{{TITLE}}',
+      products: {{PRODUCTS_JSON}},
+      theme: {
+        primary: '{{PRIMARY_COLOR}}',
+        secondary: '{{SECONDARY_COLOR}}',
+        bg: '{{BG_COLOR}}'
+      },
+      difficulty: {{DIFFICULTY}},
+      showBranding: {{SHOW_BRANDING}}
+    };
+
+    class BootScene extends Phaser.Scene {
+      constructor() { super({ key: 'BootScene' }); }
+
+      preload() {
+        const { width, height } = this.scale;
+        const barWidth = 300, barHeight = 20;
+        const barX = (width - barWidth) / 2, barY = height / 2;
+        
+        const progressBar = this.add.graphics();
+        const progressBox = this.add.graphics();
+        progressBox.fillStyle(0x222222, 0.8);
+        progressBox.fillRoundedRect(barX, barY, barWidth, barHeight, 10);
+        
+        this.load.on('progress', (value) => {
+          progressBar.clear();
+          progressBar.fillStyle(parseInt(CONFIG.theme.primary.replace('#', ''), 16), 1);
+          progressBar.fillRoundedRect(barX + 4, barY + 4, (barWidth - 8) * value, barHeight - 8, 6);
+        });
+      }
+
+      create() {
+        this.createTextures();
+        this.scene.start('GameScene');
+      }
+
+      createTextures() {
+        const colors = [
+          parseInt(CONFIG.theme.primary.replace('#', ''), 16),
+          parseInt(CONFIG.theme.secondary.replace('#', ''), 16),
+          0xFF6B6B, 0x4ECDC4, 0xFFE66D, 0xA78BFA
+        ];
+
+        colors.forEach((color, i) => {
+          const gfx = this.make.graphics({ add: false });
+          gfx.fillStyle(0x000000, 0.3);
+          gfx.fillRoundedRect(4, 4, 48, 48, 10);
+          gfx.fillStyle(color);
+          gfx.fillRoundedRect(0, 0, 48, 48, 10);
+          gfx.fillStyle(0xffffff, 0.35);
+          gfx.fillRoundedRect(4, 4, 40, 20, { tl: 8, tr: 8, bl: 0, br: 0 });
+          gfx.generateTexture('tile' + i, 52, 52);
+        });
+
+        const selGfx = this.make.graphics({ add: false });
+        selGfx.lineStyle(4, 0xFFFFFF);
+        selGfx.strokeRoundedRect(0, 0, 52, 52, 12);
+        selGfx.generateTexture('selection', 52, 52);
+      }
+    }
+
+    class GameScene extends Phaser.Scene {
+      constructor() {
+        super({ key: 'GameScene' });
+        this.score = 0;
+        this.moves = 30;
+        this.gridSize = 6;
+        this.tileSize = 58;
+        this.tiles = [];
+        this.selected = null;
+        this.canMove = true;
+        this.highScore = parseInt(localStorage.getItem('dmi-match3-highscore') || '0');
+      }
+
+      create() {
+        const { width, height } = this.scale;
+        
+        const bg = this.add.graphics();
+        bg.fillGradientStyle(
+          parseInt(CONFIG.theme.bg.replace('#', ''), 16),
+          parseInt(CONFIG.theme.bg.replace('#', ''), 16),
+          0x000000, 0x000000
+        );
+        bg.fillRect(0, 0, width, height);
+
+        this.add.text(width/2, 35, CONFIG.title, {
+          fontSize: '26px', fontFamily: 'Inter, sans-serif',
+          fill: '#ffffff', fontStyle: 'bold'
+        }).setOrigin(0.5);
+
+        if (CONFIG.products.length > 0) {
+          this.add.text(width/2, 65, CONFIG.products.map(p => p.icon).join('  '), 
+            { fontSize: '20px' }).setOrigin(0.5);
+        }
+
+        const panelY = 95;
+        const panelGfx = this.add.graphics();
+        panelGfx.fillStyle(0x000000, 0.4);
+        panelGfx.fillRoundedRect(20, panelY, width - 40, 50, 12);
+
+        this.add.text(80, panelY + 25, 'SCORE', {
+          fontSize: '12px', fontFamily: 'Inter, sans-serif', fill: '#888888'
+        }).setOrigin(0.5);
+
+        this.scoreText = this.add.text(80, panelY + 43, '0', {
+          fontSize: '24px', fontFamily: 'Inter, sans-serif',
+          fill: CONFIG.theme.primary, fontStyle: 'bold'
+        }).setOrigin(0.5, 0);
+
+        this.add.text(width - 80, panelY + 25, 'MOVES', {
+          fontSize: '12px', fontFamily: 'Inter, sans-serif', fill: '#888888'
+        }).setOrigin(0.5);
+
+        this.movesText = this.add.text(width - 80, panelY + 43, this.moves.toString(), {
+          fontSize: '24px', fontFamily: 'Inter, sans-serif',
+          fill: '#ffffff', fontStyle: 'bold'
+        }).setOrigin(0.5, 0);
+
+        this.gridOffsetX = (width - this.gridSize * this.tileSize) / 2;
+        this.gridOffsetY = 165;
+
+        const gridBg = this.add.graphics();
+        gridBg.fillStyle(0x000000, 0.4);
+        gridBg.fillRoundedRect(
+          this.gridOffsetX - 8, this.gridOffsetY - 8,
+          this.gridSize * this.tileSize + 16,
+          this.gridSize * this.tileSize + 16, 16
+        );
+
+        this.initGrid();
+
+        this.selectionSprite = this.add.sprite(0, 0, 'selection').setVisible(false).setDepth(100);
+        this.tweens.add({
+          targets: this.selectionSprite,
+          scale: 1.1, duration: 400, yoyo: true, repeat: -1
+        });
+      }
+
+      initGrid() {
+        this.tiles = [];
+        for (let row = 0; row < this.gridSize; row++) {
+          this.tiles[row] = [];
+          for (let col = 0; col < this.gridSize; col++) {
+            this.createTile(row, col);
+          }
+        }
+        let iterations = 0;
+        while (this.findMatches().length > 0 && iterations < 100) {
+          this.removeMatchesInstant(this.findMatches());
+          this.refillGridInstant();
+          iterations++;
+        }
+      }
+
+      createTile(row, col, drop = false) {
+        let type, attempts = 0;
+        do {
+          type = Phaser.Math.Between(0, 5);
+          attempts++;
+        } while (this.wouldMatch(row, col, type) && attempts < 50);
+
+        const x = this.gridOffsetX + col * this.tileSize + this.tileSize/2;
+        const startY = drop ? this.gridOffsetY - this.tileSize * 2 : this.gridOffsetY + row * this.tileSize + this.tileSize/2;
+        const endY = this.gridOffsetY + row * this.tileSize + this.tileSize/2;
+
+        const tile = this.add.sprite(x, startY, 'tile' + type);
+        tile.setInteractive();
+        tile.tileType = type;
+        tile.gridRow = row;
+        tile.gridCol = col;
+        tile.setScale(0.95);
+
+        if (drop) {
+          this.tweens.add({
+            targets: tile, y: endY,
+            duration: 250 + row * 30, ease: 'Bounce.easeOut'
+          });
+        }
+
+        tile.on('pointerdown', () => this.selectTile(tile));
+        this.tiles[row][col] = tile;
+        return tile;
+      }
+
+      wouldMatch(row, col, type) {
+        if (col >= 2 && 
+            this.tiles[row]?.[col-1]?.tileType === type && 
+            this.tiles[row]?.[col-2]?.tileType === type) return true;
+        if (row >= 2 && 
+            this.tiles[row-1]?.[col]?.tileType === type && 
+            this.tiles[row-2]?.[col]?.tileType === type) return true;
+        return false;
+      }
+
+      selectTile(tile) {
+        if (!this.canMove || this.moves <= 0) return;
+
+        if (!this.selected) {
+          this.selected = tile;
+          this.selectionSprite.setPosition(tile.x, tile.y).setVisible(true);
+          this.tweens.add({ targets: tile, scale: 1.05, duration: 100, yoyo: true });
+        } else {
+          const rowDiff = Math.abs(tile.gridRow - this.selected.gridRow);
+          const colDiff = Math.abs(tile.gridCol - this.selected.gridCol);
+
+          if ((rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1)) {
+            this.swapTiles(this.selected, tile);
+          } else {
+            this.selected = tile;
+            this.selectionSprite.setPosition(tile.x, tile.y);
+          }
+        }
+      }
+
+      swapTiles(tile1, tile2) {
+        this.canMove = false;
+        this.selectionSprite.setVisible(false);
+
+        const row1 = tile1.gridRow, col1 = tile1.gridCol;
+        const row2 = tile2.gridRow, col2 = tile2.gridCol;
+
+        this.tiles[row1][col1] = tile2;
+        this.tiles[row2][col2] = tile1;
+        tile1.gridRow = row2; tile1.gridCol = col2;
+        tile2.gridRow = row1; tile2.gridCol = col1;
+
+        const x1 = this.gridOffsetX + col1 * this.tileSize + this.tileSize/2;
+        const y1 = this.gridOffsetY + row1 * this.tileSize + this.tileSize/2;
+        const x2 = this.gridOffsetX + col2 * this.tileSize + this.tileSize/2;
+        const y2 = this.gridOffsetY + row2 * this.tileSize + this.tileSize/2;
+
+        this.tweens.add({ targets: tile1, x: x2, y: y2, duration: 150, ease: 'Power2' });
+        this.tweens.add({
+          targets: tile2, x: x1, y: y1, duration: 150, ease: 'Power2',
+          onComplete: () => {
+            const matches = this.findMatches();
+            if (matches.length > 0) {
+              this.moves--;
+              this.movesText.setText(this.moves.toString());
+              if (this.moves <= 5) this.movesText.setColor('#FF6B6B');
+              this.processMatches();
+            } else {
+              this.tiles[row1][col1] = tile1;
+              this.tiles[row2][col2] = tile2;
+              tile1.gridRow = row1; tile1.gridCol = col1;
+              tile2.gridRow = row2; tile2.gridCol = col2;
+
+              this.tweens.add({ targets: tile1, x: x1, y: y1, duration: 150 });
+              this.tweens.add({
+                targets: tile2, x: x2, y: y2, duration: 150,
+                onComplete: () => { this.canMove = true; }
+              });
+            }
+          }
+        });
+
+        this.selected = null;
+      }
+
+      findMatches() {
+        const matches = new Set();
+
+        for (let row = 0; row < this.gridSize; row++) {
+          for (let col = 0; col < this.gridSize - 2; col++) {
+            const type = this.tiles[row]?.[col]?.tileType;
+            if (type !== undefined &&
+                this.tiles[row]?.[col+1]?.tileType === type &&
+                this.tiles[row]?.[col+2]?.tileType === type) {
+              matches.add(this.tiles[row][col]);
+              matches.add(this.tiles[row][col+1]);
+              matches.add(this.tiles[row][col+2]);
+              if (this.tiles[row]?.[col+3]?.tileType === type) {
+                matches.add(this.tiles[row][col+3]);
+              }
+            }
+          }
+        }
+
+        for (let col = 0; col < this.gridSize; col++) {
+          for (let row = 0; row < this.gridSize - 2; row++) {
+            const type = this.tiles[row]?.[col]?.tileType;
+            if (type !== undefined &&
+                this.tiles[row+1]?.[col]?.tileType === type &&
+                this.tiles[row+2]?.[col]?.tileType === type) {
+              matches.add(this.tiles[row][col]);
+              matches.add(this.tiles[row+1][col]);
+              matches.add(this.tiles[row+2][col]);
+              if (this.tiles[row+3]?.[col]?.tileType === type) {
+                matches.add(this.tiles[row+3][col]);
+              }
+            }
+          }
+        }
+
+        return Array.from(matches).filter(t => t);
+      }
+
+      processMatches() {
+        const matches = this.findMatches();
+        if (matches.length > 0) {
+          const bonus = matches.length > 3 ? (matches.length - 3) * 5 : 0;
+          this.score += matches.length * 10 + bonus;
+          this.scoreText.setText(this.score.toString());
+          this.tweens.add({ targets: this.scoreText, scale: 1.2, duration: 100, yoyo: true });
+
+          this.removeMatches(matches);
+          
+          this.time.delayedCall(220, () => {
+            this.dropTiles();
+            this.time.delayedCall(350, () => {
+              this.refillGrid();
+              this.time.delayedCall(400, () => { this.processMatches(); });
+            });
+          });
+        } else {
+          this.canMove = true;
+          if (this.moves <= 0) this.gameOver();
+        }
+      }
+
+      removeMatches(matches) {
+        matches.forEach(tile => {
+          if (tile) {
+            this.tiles[tile.gridRow][tile.gridCol] = null;
+            
+            for (let i = 0; i < 4; i++) {
+              const particle = this.add.circle(tile.x, tile.y, 6, 
+                tile.tileType < 2 ? parseInt(CONFIG.theme.primary.replace('#', ''), 16) : 0xffffff);
+              this.tweens.add({
+                targets: particle,
+                x: particle.x + Phaser.Math.Between(-40, 40),
+                y: particle.y + Phaser.Math.Between(-40, 40),
+                alpha: 0, scale: 0, duration: 300,
+                onComplete: () => particle.destroy()
+              });
+            }
+            
+            this.tweens.add({
+              targets: tile, scale: 0, alpha: 0, duration: 180, ease: 'Back.easeIn',
+              onComplete: () => tile.destroy()
+            });
+          }
+        });
+      }
+
+      removeMatchesInstant(matches) {
+        matches.forEach(tile => {
+          if (tile) {
+            this.tiles[tile.gridRow][tile.gridCol] = null;
+            tile.destroy();
+          }
+        });
+      }
+
+      dropTiles() {
+        for (let col = 0; col < this.gridSize; col++) {
+          let emptyRow = this.gridSize - 1;
+          for (let row = this.gridSize - 1; row >= 0; row--) {
+            if (this.tiles[row]?.[col]) {
+              if (row !== emptyRow) {
+                const tile = this.tiles[row][col];
+                this.tiles[emptyRow][col] = tile;
+                this.tiles[row][col] = null;
+                tile.gridRow = emptyRow;
+                
+                this.tweens.add({
+                  targets: tile,
+                  y: this.gridOffsetY + emptyRow * this.tileSize + this.tileSize/2,
+                  duration: 180, ease: 'Bounce.easeOut'
+                });
+              }
+              emptyRow--;
+            }
+          }
+        }
+      }
+
+      refillGrid() {
+        for (let col = 0; col < this.gridSize; col++) {
+          for (let row = 0; row < this.gridSize; row++) {
+            if (!this.tiles[row]?.[col]) {
+              this.createTile(row, col, true);
+            }
+          }
+        }
+      }
+
+      refillGridInstant() {
+        for (let col = 0; col < this.gridSize; col++) {
+          for (let row = 0; row < this.gridSize; row++) {
+            if (!this.tiles[row]?.[col]) {
+              this.createTile(row, col, false);
+            }
+          }
+        }
+      }
+
+      gameOver() {
+        if (this.score > this.highScore) {
+          this.highScore = this.score;
+          localStorage.setItem('dmi-match3-highscore', this.highScore.toString());
+        }
+
+        const { width, height } = this.scale;
+        
+        const overlay = this.add.graphics();
+        overlay.fillStyle(0x000000, 0.8);
+        overlay.fillRect(0, 0, width, height);
+        overlay.setDepth(200);
+
+        const panel = this.add.graphics();
+        panel.fillStyle(0x1a1a2e, 1);
+        panel.fillRoundedRect(width/2 - 150, height/2 - 130, 300, 260, 24);
+        panel.setDepth(201);
+
+        this.add.text(width/2, height/2 - 85, 'GAME OVER', {
+          fontSize: '34px', fontFamily: 'Inter, sans-serif',
+          fill: '#ffffff', fontStyle: 'bold'
+        }).setOrigin(0.5).setDepth(202);
+
+        this.add.text(width/2, height/2 - 30, 'Final Score', {
+          fontSize: '16px', fontFamily: 'Inter, sans-serif', fill: '#888888'
+        }).setOrigin(0.5).setDepth(202);
+
+        this.add.text(width/2, height/2 + 5, this.score.toString(), {
+          fontSize: '48px', fontFamily: 'Inter, sans-serif',
+          fill: CONFIG.theme.primary, fontStyle: 'bold'
+        }).setOrigin(0.5).setDepth(202);
+
+        this.add.text(width/2, height/2 + 55, 'Best: ' + this.highScore, {
+          fontSize: '18px', fontFamily: 'Inter, sans-serif', fill: '#666666'
+        }).setOrigin(0.5).setDepth(202);
+
+        const restartBtn = this.add.text(width/2, height/2 + 100, '↻ TAP TO PLAY AGAIN', {
+          fontSize: '16px', fontFamily: 'Inter, sans-serif',
+          fill: '#ffffff', fontStyle: 'bold'
+        }).setOrigin(0.5).setDepth(202);
+
+        this.tweens.add({
+          targets: restartBtn, alpha: 0.5, duration: 600, yoyo: true, repeat: -1
+        });
+
+        this.input.once('pointerdown', () => {
+          this.score = 0;
+          this.moves = 30;
+          this.scene.restart();
+        });
+      }
+    }
+
+    const game = new Phaser.Game({
+      type: Phaser.AUTO,
+      parent: 'game-container',
+      width: 400,
+      height: 700,
+      scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+      scene: [BootScene, GameScene],
+      render: { antialias: true, roundPixels: true }
+    });
+  </script>
+</body>
+</html>

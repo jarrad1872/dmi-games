@@ -1,0 +1,17 @@
+{
+  "name": "dmi-games",
+  "version": "1.0.0",
+  "description": "Arcade games for DMI Tools Corp",
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "build": "node scripts/build.js",
+    "serve": "npx serve . -l 3000"
+  },
+  "keywords": ["games", "phaser", "arcade", "dmi-tools"],
+  "author": "DMI Tools Corp",
+  "license": "MIT",
+  "devDependencies": {
+    "chokidar": "^3.5.3",
+    "ws": "^8.14.2"
+  }
+}

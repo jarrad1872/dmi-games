@@ -1,0 +1,16 @@
+{
+  "id": "match3",
+  "name": "Match-3 Puzzle",
+  "description": "Addictive tile-matching puzzle game. Swap tiles to create matches of 3 or more!",
+  "category": "puzzle",
+  "icon": "💎",
+  "difficulty": "medium",
+  "features": [
+    "6x6 grid gameplay",
+    "Tile swapping mechanics",
+    "Combo detection",
+    "Move counter",
+    "Cascade matches"
+  ],
+  "tags": ["puzzle", "casual", "match-3", "strategy"]
+}
