@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Drill Empire — DMI Tools</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; touch-action: manipulation; user-select: none; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: #1a1a2e; font-family: -apple-system, sans-serif; }
+        #app { display: flex; flex-direction: column; height: 100%; max-width: 480px; margin: 0 auto; }
+        header { padding: 12px 15px; background: #252538; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .logo { color: #ff6b35; font-size: 10px; letter-spacing: 2px; }
+        h1 { color: #ffd700; font-size: 20px; }
+        .money { color: #22c55e; font-size: 24px; font-weight: bold; }
+        .stats { display: flex; gap: 15px; }
+        .stat { background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px; text-align: center; }
+        .stat-label { color: #888; font-size: 10px; }
+        .stat-value { color: white; font-size: 14px; font-weight: bold; }
+        #mergeArea { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 15px; background: linear-gradient(180deg, #2d2d44 0%, #1f1f30 100%); }
+        .slot { background: rgba(0,0,0,0.3); border-radius: 12px; aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed #444; cursor: grab; transition: all 0.2s; }
+        .slot.has-drill { border-style: solid; border-color: #ff6b35; background: rgba(255,107,53,0.1); }
+        .slot.drag-over { border-color: #ffd700; background: rgba(255,215,0,0.2); transform: scale(1.05); }
+        .slot.dragging { opacity: 0.5; }
+        .drill-icon { font-size: 36px; }
+        .drill-level { font-size: 11px; color: #ffd700; margin-top: 4px; font-weight: bold; }
+        .drill-dps { font-size: 10px; color: #22c55e; }
+        .controls { padding: 15px; background: #252538; }
+        .btn { width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px; transition: all 0.2s; }
+        .btn-buy { background: linear-gradient(135deg, #ff6b35, #f7931e); color: white; }
+        .btn-buy:disabled { opacity: 0.5; }
+        .btn-collect { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; }
+        .info { display: flex; justify-content: space-between; font-size: 12px; color: #888; }
+        .merge-hint { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); padding: 20px; border-radius: 15px; color: white; text-align: center; display: none; z-index: 100; }
+        .merge-hint.show { display: block; animation: pop 0.3s ease-out; }
+        @keyframes pop { 0% { transform: translate(-50%, -50%) scale(0.5); } 100% { transform: translate(-50%, -50%) scale(1); } }
+        .new-drill { color: #ffd700; font-size: 24px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <div class="header-top">
+                <div>
+                    <div class="logo">⚙️ DMI TOOLS ⚙️</div>
+                    <h1>DRILL EMPIRE</h1>
+                </div>
+                <div class="money" id="money">$0</div>
+            </div>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-label">TOTAL DPS</div>
+                    <div class="stat-value" id="totalDps">0/s</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">DRILLS</div>
+                    <div class="stat-value" id="drillCount">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">BEST</div>
+                    <div class="stat-value" id="bestDrill">Lv.0</div>
+                </div>
+            </div>
+        </header>
+        <div id="mergeArea"></div>
+        <div class="controls">
+            <button class="btn btn-buy" id="buyBtn">🔩 BUY DRILL — $10</button>
+            <div class="info">
+                <span>Drag drills together to merge!</span>
+                <span id="slots">0/16 slots</span>
+            </div>
+        </div>
+    </div>
+    <div class="merge-hint" id="mergeHint">
+        <div>✨ MERGED! ✨</div>
+        <div class="new-drill" id="newDrillName">Level 2 Drill</div>
+        <div id="newDrillDps">+2 DPS</div>
+    </div>
+    <script>
+    const DRILLS = [
+        { name: 'Hand Drill', icon: '🔩', dps: 1 },
+        { name: 'Cordless', icon: '🔧', dps: 3 },
+        { name: 'Corded', icon: '🔌', dps: 8 },
+        { name: 'Hammer Drill', icon: '🔨', dps: 20 },
+        { name: 'Rotary', icon: '⚡', dps: 50 },
+        { name: 'Core Drill', icon: '💎', dps: 125 },
+        { name: 'Hydraulic', icon: '🚀', dps: 300 },
+        { name: 'Industrial', icon: '🏭', dps: 750 },
+        { name: 'Mega Rig', icon: '🌟', dps: 2000 },
+        { name: 'Quantum', icon: '🌌', dps: 5000 }
+    ];
+    
+    let money = 0, slots = Array(16).fill(null), buyCost = 10;
+    let draggedSlot = null;
+    
+    function formatNum(n) {
+        if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+        if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+        return Math.floor(n).toString();
+    }
+    
+    function render() {
+        const area = document.getElementById('mergeArea');
+        area.innerHTML = '';
+        
+        slots.forEach((drill, i) => {
+            const slot = document.createElement('div');
+            slot.className = 'slot' + (drill !== null ? ' has-drill' : '');
+            slot.dataset.index = i;
+            
+            if (drill !== null) {
+                const d = DRILLS[drill];
+                slot.innerHTML = `
+                    <div class="drill-icon">${d.icon}</div>
+                    <div class="drill-level">Lv.${drill + 1}</div>
+                    <div class="drill-dps">$${d.dps}/s</div>
+                `;
+                slot.draggable = true;
+            }
+            
+            // Drag events
+            slot.addEventListener('dragstart', e => {
+                if (drill === null) { e.preventDefault(); return; }
+                draggedSlot = i;
+                slot.classList.add('dragging');
+            });
+            
+            slot.addEventListener('dragend', () => {
+                slot.classList.remove('dragging');
+                draggedSlot = null;
+            });
+            
+            slot.addEventListener('dragover', e => {
+                e.preventDefault();
+                if (draggedSlot !== null && draggedSlot !== i) {
+                    slot.classList.add('drag-over');
+                }
+            });
+            
+            slot.addEventListener('dragleave', () => {
+                slot.classList.remove('drag-over');
+            });
+            
+            slot.addEventListener('drop', e => {
+                e.preventDefault();
+                slot.classList.remove('drag-over');
+                if (draggedSlot === null || draggedSlot === i) return;
+                
+                const fromDrill = slots[draggedSlot];
+                const toDrill = slots[i];
+                
+                if (toDrill === null) {
+                    // Move
+                    slots[i] = fromDrill;
+                    slots[draggedSlot] = null;
+                } else if (fromDrill === toDrill && fromDrill < DRILLS.length - 1) {
+                    // Merge!
+                    slots[i] = fromDrill + 1;
+                    slots[draggedSlot] = null;
+                    showMergeHint(fromDrill + 1);
+                    if (navigator.vibrate) navigator.vibrate([30, 20, 50]);
+                }
+                
+                render();
+                updateStats();
+            });
+            
+            // Touch support
+            let touchStartSlot = null;
+            slot.addEventListener('touchstart', e => {
+                if (drill === null) return;
+                touchStartSlot = i;
+                slot.classList.add('dragging');
+            });
+            
+            slot.addEventListener('touchend', e => {
+                slot.classList.remove('dragging');
+                if (touchStartSlot === null) return;
+                
+                const touch = e.changedTouches[0];
+                const el = document.elementFromPoint(touch.clientX, touch.clientY);
+                const targetSlot = el?.closest('.slot');
+                
+                if (targetSlot && targetSlot.dataset.index != touchStartSlot) {
+                    const targetIdx = parseInt(targetSlot.dataset.index);
+                    const fromDrill = slots[touchStartSlot];
+                    const toDrill = slots[targetIdx];
+                    
+                    if (toDrill === null) {
+                        slots[targetIdx] = fromDrill;
+                        slots[touchStartSlot] = null;
+                    } else if (fromDrill === toDrill && fromDrill < DRILLS.length - 1) {
+                        slots[targetIdx] = fromDrill + 1;
+                        slots[touchStartSlot] = null;
+                        showMergeHint(fromDrill + 1);
+                        if (navigator.vibrate) navigator.vibrate([30, 20, 50]);
+                    }
+                    
+                    render();
+                    updateStats();
+                }
+                touchStartSlot = null;
+            });
+            
+            area.appendChild(slot);
+        });
+    }
+    
+    function showMergeHint(level) {
+        const hint = document.getElementById('mergeHint');
+        document.getElementById('newDrillName').textContent = DRILLS[level].name;
+        document.getElementById('newDrillDps').textContent = `+$${DRILLS[level].dps}/s`;
+        hint.classList.add('show');
+        setTimeout(() => hint.classList.remove('show'), 1500);
+    }
+    
+    function updateStats() {
+        let totalDps = 0, count = 0, best = -1;
+        slots.forEach(d => {
+            if (d !== null) {
+                totalDps += DRILLS[d].dps;
+                count++;
+                if (d > best) best = d;
+            }
+        });
+        
+        document.getElementById('money').textContent = '$' + formatNum(money);
+        document.getElementById('totalDps').textContent = '$' + formatNum(totalDps) + '/s';
+        document.getElementById('drillCount').textContent = count;
+        document.getElementById('bestDrill').textContent = best >= 0 ? 'Lv.' + (best + 1) : 'Lv.0';
+        document.getElementById('slots').textContent = count + '/16 slots';
+        document.getElementById('buyBtn').textContent = `🔩 BUY DRILL — $${buyCost}`;
+        document.getElementById('buyBtn').disabled = money < buyCost || count >= 16;
+    }
+    
+    function buyDrill() {
+        if (money < buyCost) return;
+        const emptyIdx = slots.findIndex(s => s === null);
+        if (emptyIdx === -1) return;
+        
+        money -= buyCost;
+        slots[emptyIdx] = 0; // Level 0 = Hand Drill
+        buyCost = Math.floor(buyCost * 1.15);
+        
+        if (navigator.vibrate) navigator.vibrate(20);
+        render();
+        updateStats();
+    }
+    
+    function gameLoop() {
+        let totalDps = 0;
+        slots.forEach(d => { if (d !== null) totalDps += DRILLS[d].dps; });
+        money += totalDps / 10; // 10 ticks per second
+        updateStats();
+    }
+    
+    document.getElementById('buyBtn').addEventListener('click', buyDrill);
+    
+    // Init
+    render();
+    updateStats();
+    setInterval(gameLoop, 100);
+    
+    // Auto-save
+    setInterval(() => {
+        localStorage.setItem('drillEmpire', JSON.stringify({ money, slots, buyCost }));
+    }, 5000);
+    
+    // Load
+    const saved = localStorage.getItem('drillEmpire');
+    if (saved) {
+        const data = JSON.parse(saved);
+        money = data.money || 0;
+        slots = data.slots || Array(16).fill(null);
+        buyCost = data.buyCost || 10;
+        render();
+        updateStats();
+    }
+    </script>
+</body>
+</html>

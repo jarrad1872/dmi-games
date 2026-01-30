@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Clean Cut — DMI Tools</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; user-select: none; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: #1a1a2e; font-family: -apple-system, sans-serif; }
+        #app { display: flex; flex-direction: column; height: 100%; max-width: 480px; margin: 0 auto; background: #252538; }
+        header { padding: 15px; text-align: center; background: #1a1a2e; }
+        .logo { color: #ff6b35; font-size: 10px; letter-spacing: 2px; }
+        h1 { color: #ffd700; font-size: 24px; margin: 5px 0; }
+        .stats { display: flex; justify-content: center; gap: 30px; margin-top: 10px; }
+        .stat { text-align: center; }
+        .stat-label { color: #888; font-size: 11px; }
+        .stat-value { color: white; font-size: 20px; font-weight: bold; }
+        .stat-value.money { color: #22c55e; }
+        #canvas { flex: 1; background: #4a4a5a; cursor: crosshair; }
+        .controls { padding: 15px; background: #1a1a2e; display: flex; gap: 10px; justify-content: center; }
+        .tool-btn { padding: 12px 20px; border-radius: 10px; border: 2px solid #444; background: #2d2d44; color: white; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+        .tool-btn.active { border-color: #ff6b35; background: #3d3d5c; }
+        .progress { padding: 10px 15px; background: #1f1f30; }
+        .progress-bar { height: 8px; background: #333; border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #ff6b35, #ffd700); transition: width 0.3s; }
+        .level-complete { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
+        .level-complete.show { display: flex; }
+        .level-complete h2 { color: #ffd700; font-size: 32px; }
+        .level-complete .reward { color: #22c55e; font-size: 28px; margin: 20px 0; }
+        .btn { background: linear-gradient(135deg, #ff6b35, #f7931e); color: white; border: none; padding: 15px 40px; font-size: 18px; font-weight: bold; border-radius: 30px; cursor: pointer; }
+        .instruction { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 16px; text-align: center; opacity: 0.7; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <div class="logo">⚙️ DMI TOOLS ⚙️</div>
+            <h1>CLEAN CUT</h1>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-label">LEVEL</div>
+                    <div class="stat-value" id="level">1</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">EARNED</div>
+                    <div class="stat-value money" id="money">$0</div>
+                </div>
+            </div>
+        </header>
+        <div class="progress">
+            <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%"></div></div>
+        </div>
+        <canvas id="canvas"></canvas>
+        <div class="controls">
+            <button class="tool-btn active" data-tool="line">✂️ Line Cut</button>
+            <button class="tool-btn" data-tool="circle">⭕ Core Drill</button>
+        </div>
+    </div>
+    <div class="level-complete" id="levelComplete">
+        <h2>✨ PERFECT CUT! ✨</h2>
+        <div class="reward" id="reward">+$100</div>
+        <button class="btn" id="nextBtn">NEXT JOB</button>
+    </div>
+    <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    let tool = 'line', drawing = false, startX, startY;
+    let cuts = [], targets = [], level = 1, money = 0, progress = 0;
+    let particles = [];
+    
+    // Audio
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(freq, duration) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.value = freq;
+        osc.type = 'sawtooth';
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
+    
+    function resize() {
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * window.devicePixelRatio;
+        canvas.height = rect.height * window.devicePixelRatio;
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+    
+    function generateLevel() {
+        targets = [];
+        cuts = [];
+        progress = 0;
+        
+        const w = canvas.width / window.devicePixelRatio;
+        const h = canvas.height / window.devicePixelRatio;
+        
+        // Generate random cut targets
+        const count = 2 + Math.floor(level / 2);
+        for (let i = 0; i < count; i++) {
+            const type = Math.random() > 0.5 ? 'line' : 'circle';
+            if (type === 'line') {
+                const vertical = Math.random() > 0.5;
+                targets.push({
+                    type: 'line',
+                    x1: vertical ? 50 + Math.random() * (w - 100) : 30,
+                    y1: vertical ? 30 : 50 + Math.random() * (h - 100),
+                    x2: vertical ? 50 + Math.random() * (w - 100) : w - 30,
+                    y2: vertical ? h - 30 : 50 + Math.random() * (h - 100),
+                    completed: false
+                });
+                // Fix the line to be straight
+                if (vertical) targets[targets.length-1].x2 = targets[targets.length-1].x1;
+                else targets[targets.length-1].y2 = targets[targets.length-1].y1;
+            } else {
+                targets.push({
+                    type: 'circle',
+                    x: 60 + Math.random() * (w - 120),
+                    y: 60 + Math.random() * (h - 120),
+                    r: 25 + Math.random() * 20,
+                    completed: false
+                });
+            }
+        }
+        draw();
+    }
+    
+    function draw() {
+        const w = canvas.width / window.devicePixelRatio;
+        const h = canvas.height / window.devicePixelRatio;
+        
+        // Concrete background
+        ctx.fillStyle = '#808080';
+        ctx.fillRect(0, 0, w, h);
+        
+        // Texture
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        for (let i = 0; i < 200; i++) {
+            const x = (Math.sin(i * 12.34) * 0.5 + 0.5) * w;
+            const y = (Math.cos(i * 56.78) * 0.5 + 0.5) * h;
+            ctx.beginPath();
+            ctx.arc(x, y, 1 + Math.random() * 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Draw targets (guidelines)
+        targets.forEach(t => {
+            ctx.strokeStyle = t.completed ? 'rgba(34, 197, 94, 0.8)' : 'rgba(255, 107, 53, 0.5)';
+            ctx.lineWidth = 3;
+            ctx.setLineDash(t.completed ? [] : [10, 5]);
+            
+            if (t.type === 'line') {
+                ctx.beginPath();
+                ctx.moveTo(t.x1, t.y1);
+                ctx.lineTo(t.x2, t.y2);
+                ctx.stroke();
+            } else {
+                ctx.beginPath();
+                ctx.arc(t.x, t.y, t.r, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+        });
+        
+        // Draw cuts (actual cuts made)
+        cuts.forEach(c => {
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round';
+            
+            if (c.type === 'line') {
+                ctx.beginPath();
+                ctx.moveTo(c.x1, c.y1);
+                ctx.lineTo(c.x2, c.y2);
+                ctx.stroke();
+                // Cut highlight
+                ctx.strokeStyle = '#555';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            } else {
+                ctx.beginPath();
+                ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.strokeStyle = '#555';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        });
+        
+        // Particles
+        particles.forEach((p, i) => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.5;
+            p.life -= 0.02;
+            if (p.life <= 0) { particles.splice(i, 1); return; }
+            ctx.fillStyle = `rgba(128, 128, 128, ${p.life})`;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        
+        if (particles.length > 0) requestAnimationFrame(draw);
+    }
+    
+    function spawnParticles(x, y) {
+        for (let i = 0; i < 10; i++) {
+            particles.push({
+                x, y,
+                vx: (Math.random() - 0.5) * 8,
+                vy: -Math.random() * 5,
+                size: 2 + Math.random() * 3,
+                life: 1
+            });
+        }
+    }
+    
+    function checkTargetCompletion(cut) {
+        targets.forEach(t => {
+            if (t.completed) return;
+            
+            if (t.type === 'line' && cut.type === 'line') {
+                // Check if cut roughly matches target line
+                const dist1 = Math.hypot(cut.x1 - t.x1, cut.y1 - t.y1) + Math.hypot(cut.x2 - t.x2, cut.y2 - t.y2);
+                const dist2 = Math.hypot(cut.x1 - t.x2, cut.y1 - t.y2) + Math.hypot(cut.x2 - t.x1, cut.y2 - t.y1);
+                if (Math.min(dist1, dist2) < 80) {
+                    t.completed = true;
+                    playSound(800, 0.2);
+                }
+            } else if (t.type === 'circle' && cut.type === 'circle') {
+                const dist = Math.hypot(cut.x - t.x, cut.y - t.y);
+                const rDiff = Math.abs(cut.r - t.r);
+                if (dist < 30 && rDiff < 20) {
+                    t.completed = true;
+                    playSound(1000, 0.2);
+                }
+            }
+        });
+        
+        // Update progress
+        const completed = targets.filter(t => t.completed).length;
+        progress = completed / targets.length;
+        document.getElementById('progressFill').style.width = (progress * 100) + '%';
+        
+        if (progress >= 1) {
+            setTimeout(completeLevel, 500);
+        }
+    }
+    
+    function completeLevel() {
+        const reward = 50 + level * 25;
+        money += reward;
+        document.getElementById('money').textContent = '$' + money;
+        document.getElementById('reward').textContent = '+$' + reward;
+        document.getElementById('levelComplete').classList.add('show');
+        if (navigator.vibrate) navigator.vibrate([50, 30, 50, 30, 100]);
+    }
+    
+    function nextLevel() {
+        level++;
+        document.getElementById('level').textContent = level;
+        document.getElementById('levelComplete').classList.remove('show');
+        generateLevel();
+    }
+    
+    // Event handlers
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches ? e.touches[0] : e;
+        return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+    }
+    
+    canvas.addEventListener('mousedown', e => { drawing = true; const p = getPos(e); startX = p.x; startY = p.y; });
+    canvas.addEventListener('touchstart', e => { e.preventDefault(); drawing = true; const p = getPos(e); startX = p.x; startY = p.y; });
+    
+    canvas.addEventListener('mousemove', e => {
+        if (!drawing) return;
+        const p = getPos(e);
+        spawnParticles(p.x, p.y);
+        playSound(200 + Math.random() * 100, 0.05);
+        draw();
+    });
+    canvas.addEventListener('touchmove', e => {
+        e.preventDefault();
+        if (!drawing) return;
+        const p = getPos(e);
+        spawnParticles(p.x, p.y);
+        playSound(200 + Math.random() * 100, 0.05);
+        draw();
+    });
+    
+    canvas.addEventListener('mouseup', e => {
+        if (!drawing) return;
+        drawing = false;
+        const p = getPos(e);
+        
+        let cut;
+        if (tool === 'line') {
+            cut = { type: 'line', x1: startX, y1: startY, x2: p.x, y2: p.y };
+        } else {
+            const r = Math.hypot(p.x - startX, p.y - startY);
+            cut = { type: 'circle', x: startX, y: startY, r: r };
+        }
+        cuts.push(cut);
+        checkTargetCompletion(cut);
+        if (navigator.vibrate) navigator.vibrate(30);
+        draw();
+    });
+    canvas.addEventListener('touchend', e => {
+        e.preventDefault();
+        const evt = { clientX: e.changedTouches[0].clientX, clientY: e.changedTouches[0].clientY };
+        canvas.dispatchEvent(new MouseEvent('mouseup', evt));
+    });
+    
+    document.querySelectorAll('.tool-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            tool = btn.dataset.tool;
+        });
+    });
+    
+    document.getElementById('nextBtn').addEventListener('click', nextLevel);
+    
+    window.addEventListener('resize', () => { resize(); draw(); });
+    resize();
+    generateLevel();
+    </script>
+</body>
+</html>

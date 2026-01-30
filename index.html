@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DMI Tools Games</title>
+    <title>DMI Games Arcade - Play & Win</title>
+    <meta name="description" content="Play free arcade games from DMI Tools. Core drilling challenges, idle tycoons, and more!">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -13,106 +15,225 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
+            padding: 40px 20px;
             color: #fff;
         }
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
         .logo {
-            font-size: 48px;
-            margin-bottom: 10px;
+            font-size: 64px;
+            margin-bottom: 15px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
         }
         h1 {
-            font-size: 28px;
+            font-size: 36px;
             color: #ff6b35;
-            margin-bottom: 5px;
-            text-shadow: 0 0 20px rgba(255, 107, 53, 0.5);
+            margin-bottom: 10px;
+            text-shadow: 0 0 30px rgba(255, 107, 53, 0.5);
         }
         .tagline {
-            color: #888;
-            margin-bottom: 40px;
+            color: #aaa;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #ffd700;
             font-size: 14px;
+            font-weight: bold;
         }
         .games {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 30px;
-            flex-wrap: wrap;
-            justify-content: center;
+            max-width: 1200px;
+            width: 100%;
+            padding: 0 20px;
         }
         .game-card {
             background: rgba(255,255,255,0.05);
             border: 2px solid rgba(255,107,53,0.3);
             border-radius: 20px;
             padding: 30px;
-            width: 280px;
             text-align: center;
             transition: all 0.3s ease;
             text-decoration: none;
             color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s;
+        }
+        .game-card:hover::before {
+            left: 100%;
         }
         .game-card:hover {
             transform: translateY(-10px);
             border-color: #ff6b35;
-            box-shadow: 0 20px 40px rgba(255,107,53,0.2);
+            box-shadow: 0 20px 40px rgba(255,107,53,0.3);
         }
+        .badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: linear-gradient(135deg, #ff6b35, #ff4500);
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .badge.new { background: linear-gradient(135deg, #00c853, #00e676); }
+        .badge.popular { background: linear-gradient(135deg, #ffd700, #ffab00); color: #000; }
         .game-icon {
-            font-size: 64px;
-            margin-bottom: 15px;
+            font-size: 72px;
+            margin-bottom: 20px;
+            display: block;
         }
         .game-title {
-            font-size: 22px;
+            font-size: 24px;
             font-weight: bold;
             color: #ffd700;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
         .game-desc {
             font-size: 14px;
-            color: #aaa;
-            line-height: 1.5;
+            color: #bbb;
+            line-height: 1.6;
+            margin-bottom: 20px;
         }
         .play-btn {
             display: inline-block;
-            margin-top: 20px;
-            padding: 12px 30px;
+            padding: 14px 35px;
             background: linear-gradient(135deg, #ff6b35, #ff4500);
-            border-radius: 25px;
+            border-radius: 30px;
             font-weight: bold;
             text-transform: uppercase;
             font-size: 14px;
+            letter-spacing: 1px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .play-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(255,107,53,0.4);
+        }
+        .cta-section {
+            margin-top: 60px;
+            text-align: center;
+            padding: 40px;
+            background: rgba(255,107,53,0.1);
+            border-radius: 20px;
+            max-width: 600px;
+        }
+        .cta-section h2 {
+            color: #ffd700;
+            margin-bottom: 15px;
+        }
+        .cta-section p {
+            color: #aaa;
+            margin-bottom: 20px;
+        }
+        .cta-btn {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #ffd700, #ffab00);
+            color: #000;
+            border-radius: 30px;
+            font-weight: bold;
+            text-decoration: none;
+            text-transform: uppercase;
+            transition: transform 0.2s;
+        }
+        .cta-btn:hover {
+            transform: scale(1.05);
         }
         footer {
-            margin-top: 50px;
+            margin-top: 60px;
             color: #666;
             font-size: 12px;
+            text-align: center;
         }
         footer a {
             color: #ff6b35;
             text-decoration: none;
         }
+        @media (max-width: 600px) {
+            h1 { font-size: 28px; }
+            .games { gap: 20px; }
+            .game-card { padding: 25px; }
+        }
     </style>
 </head>
 <body>
-    <div class="logo">⚙️</div>
-    <h1>DMI TOOLS</h1>
-    <p class="tagline">Professional Drilling Equipment</p>
+    <div class="header">
+        <div class="logo">🎮</div>
+        <h1>DMI GAMES ARCADE</h1>
+        <p class="tagline">Play. Compete. Win Discounts!</p>
+        <p class="subtitle">⚙️ Powered by DMI Tools Corp</p>
+    </div>
     
     <div class="games">
+        <a href="core-fit/index.html" class="game-card">
+            <span class="badge new">NEW</span>
+            <span class="game-icon">🧩</span>
+            <div class="game-title">Core Fit</div>
+            <p class="game-desc">Block Blast meets drilling! Match and clear blocks in this addictive puzzle game. Precision drilling, perfect placement.</p>
+            <span class="play-btn">Play Now</span>
+        </a>
+
         <a href="core-drop.html" class="game-card">
-            <div class="game-icon">⛏️</div>
+            <span class="badge popular">Popular</span>
+            <span class="game-icon">⛏️</span>
             <div class="game-title">Core Drop</div>
-            <p class="game-desc">Flappy Bird meets core drilling. Tap to drill, avoid obstacles, unlock diamond bits!</p>
+            <p class="game-desc">Flappy Bird meets core drilling! Tap to navigate, avoid obstacles, collect diamond bits. How deep can you go?</p>
             <span class="play-btn">Play Now</span>
         </a>
         
         <a href="drill-tycoon.html" class="game-card">
-            <div class="game-icon">🔩</div>
+            <span class="game-icon">🏭</span>
             <div class="game-title">Drill Tycoon</div>
-            <p class="game-desc">Idle clicker empire. Build your drilling business from scratch to industry titan!</p>
+            <p class="game-desc">Build your drilling empire! Idle clicker where you grow from a single bit to an industry titan.</p>
+            <span class="play-btn">Play Now</span>
+        </a>
+
+        <a href="clean-cut/index.html" class="game-card">
+            <span class="badge new">NEW</span>
+            <span class="game-icon">✨</span>
+            <div class="game-title">Clean Cut</div>
+            <p class="game-desc">Satisfying cutting simulator. Hit the perfect pressure, watch cores pop out smooth. Pure ASMR vibes.</p>
+            <span class="play-btn">Play Now</span>
+        </a>
+
+        <a href="drill-empire/index.html" class="game-card">
+            <span class="game-icon">👑</span>
+            <div class="game-title">Drill Empire</div>
+            <p class="game-desc">Merge game madness! Combine small bits into bigger ones. Build the ultimate equipment collection.</p>
             <span class="play-btn">Play Now</span>
         </a>
     </div>
+
+    <div class="cta-section">
+        <h2>🛒 Ready for Real Tools?</h2>
+        <p>Get 15% off your first order with code <strong>GAMER15</strong></p>
+        <a href="https://dmitools.com" target="_blank" class="cta-btn">Shop DMI Tools →</a>
+    </div>
     
     <footer>
-        Games by Bob 🤖 • Shop real tools at <a href="https://dmitools.com" target="_blank">dmitools.com</a>
+        <p>🎮 Games by DMI Tools Corp • <a href="https://dmitools.com" target="_blank">dmitools.com</a></p>
+        <p style="margin-top: 10px;">Built with ❤️ by Bob 🤖</p>
     </footer>
 </body>
 </html>
