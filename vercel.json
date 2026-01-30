@@ -1,0 +1,9 @@
+{
+  "buildCommand": null,
+  "outputDirectory": ".",
+  "framework": null,
+  "rewrites": [
+    { "source": "/games/:path*", "destination": "/games/:path*" },
+    { "source": "/templates/:path*", "destination": "/templates/:path*" }
+  ]
+}
