@@ -1,99 +1,85 @@
 {
-  "game_id": "asmr_cut",
-  "reference_game": "ASMR Slicing / Soap Cutting Simulator",
-  "capture_date": null,
-  "total_frames": 0,
+  "game": "ASMR CUT",
+  "reference_source": "ASMR Slicing / Soap Cutting",
+  "captured_date": "2026-01-31",
+  "total_frames": 8,
   "frames": [
     {
-      "id": "frame_001",
-      "filename": "frame_001.png",
-      "category": "menu",
-      "description": "Object selection grid",
-      "key_elements": [
-        "Object thumbnails",
-        "Lock icons for uncollected",
-        "Coin/currency display"
-      ],
-      "quality_targets": [
-        "Clean grid layout",
-        "Clear unlock states"
-      ]
+      "filename": "01_menu_cutting.jpg",
+      "source": "ASMR Slicing (SilverGames)",
+      "scene": "gameplay",
+      "description": "Kiwi fruit with cut line preview, level 3, 20 moves remaining",
+      "key_elements": ["level_indicator", "move_counter", "reset_button", "cut_preview", "blender_target", "star_rating"],
+      "quality_targets": ["clean_3d_object", "dotted_cut_line", "scissor_icon", "gradient_background"]
     },
     {
-      "id": "frame_002",
-      "filename": "frame_002.png",
-      "category": "gameplay",
-      "description": "Object on cutting surface, slice starting",
-      "key_elements": [
-        "3D object render",
-        "Blade/finger position",
-        "Cut indicator"
-      ],
-      "quality_targets": [
-        "Object fills screen nicely",
-        "Touch point visible"
-      ]
+      "filename": "02_slicing_gameplay.jpg",
+      "source": "ASMR Slicing (SilverGames)",
+      "scene": "gameplay",
+      "description": "Mid-slice gameplay showing fruit pieces",
+      "key_elements": ["sliced_pieces", "physics_falling", "blender"],
+      "quality_targets": ["piece_separation", "fall_physics", "collection_feedback"]
     },
     {
-      "id": "frame_003",
-      "filename": "frame_003.png",
-      "category": "gameplay",
-      "description": "Mid-slice with trail effect",
-      "key_elements": [
-        "Slice trail following finger",
-        "Object deformation hint",
-        "Particle spray"
-      ],
-      "quality_targets": [
-        "Smooth trail rendering",
-        "60fps during slice"
-      ]
+      "filename": "03_kiwi_strawberry.jpg",
+      "source": "ASMR Slicing (SilverGames)",
+      "scene": "gameplay",
+      "description": "Multiple fruit types (kiwi, strawberry)",
+      "key_elements": ["multiple_objects", "varied_textures"],
+      "quality_targets": ["fruit_variety", "texture_detail"]
     },
     {
-      "id": "frame_004",
-      "filename": "frame_004.png",
-      "category": "feedback",
-      "description": "Slice complete - object splits",
-      "key_elements": [
-        "Two halves separating",
-        "Cross-section visible",
-        "Particle burst"
-      ],
-      "quality_targets": [
-        "Satisfying separation",
-        "Physics feel weighty"
-      ]
+      "filename": "04_apple_slicing.jpg",
+      "source": "ASMR Slicing (SilverGames)",
+      "scene": "gameplay",
+      "description": "Apple slicing with different geometry",
+      "key_elements": ["apple_object", "slice_mechanics"],
+      "quality_targets": ["round_object_slicing", "clean_cuts"]
     },
     {
-      "id": "frame_005",
-      "filename": "frame_005.png",
-      "category": "feedback",
-      "description": "Score/reward popup",
-      "key_elements": [
-        "Coin animation",
-        "Star rating",
-        "Next button"
-      ],
-      "quality_targets": [
-        "Clear feedback",
-        "Celebration feel"
-      ]
+      "filename": "05_soap_cutting.jpg",
+      "source": "Soap Cutting (SilverGames)",
+      "scene": "gameplay",
+      "description": "Knife slicing soap with particle explosion",
+      "key_elements": ["knife_tool", "particle_burst", "coin_counter", "collection_box"],
+      "quality_targets": ["satisfying_particles", "knife_animation", "colorful_pieces"]
     },
     {
-      "id": "frame_006",
-      "filename": "frame_006.png",
-      "category": "upgrade",
-      "description": "Blade upgrade shop",
-      "key_elements": [
-        "Blade options",
-        "Prices",
-        "Current blade indicator"
-      ],
-      "quality_targets": [
-        "DMI branding visible",
-        "Clear upgrade path"
-      ]
+      "filename": "06_soap_gameplay.jpg",
+      "source": "Soap Cutting (SilverGames)",
+      "scene": "gameplay",
+      "description": "General soap cutting gameplay",
+      "key_elements": ["soap_block", "cutting_mechanic"],
+      "quality_targets": ["smooth_cutting", "material_feedback"]
+    },
+    {
+      "filename": "07_soap_satisfying.jpg",
+      "source": "Soap Cutting (SilverGames)",
+      "scene": "effect",
+      "description": "Satisfying visual effect from cutting",
+      "key_elements": ["particle_effects", "visual_feedback"],
+      "quality_targets": ["satisfying_moment", "effect_polish"]
+    },
+    {
+      "filename": "08_soap_carving.jpg",
+      "source": "Soap Cutting (SilverGames)",
+      "scene": "gameplay",
+      "description": "Soap carving/sculpting variant",
+      "key_elements": ["carving_mechanic", "shape_reveal"],
+      "quality_targets": ["precision_cutting", "reveal_mechanic"]
     }
   ],
-  "sources": []
+  "missing_frames": [
+    "menu_screen",
+    "shop_screen", 
+    "level_complete",
+    "blade_upgrade_ui",
+    "tutorial_overlay"
+  ],
+  "quality_checklist": {
+    "visual_style": "3D rendered objects, soft pastel colors, clean gradients",
+    "ui_layout": "Top: level/stars/reset, Center: object, Bottom: target",
+    "animation_feel": "Satisfying physics, smooth cuts, particle bursts",
+    "audio_cues": "Crisp cuts, material feedback, coin jingle"
+  }
 }

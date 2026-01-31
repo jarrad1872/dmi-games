@@ -1,82 +1,76 @@
-# DMI Tools Arcade - Session Checkpoint
+﻿# DMI Tools Arcade - Session Checkpoint
 
-> Last Updated: 2026-01-31
+> Last Updated: 2026-01-31 (Session 3 - Bob)
 
 ## Current Status
 
-**Phase**: 1 - Reference Gathering (BLOCKED on Chrome MCP)
-**Progress**: Phase 0 complete, Phase 1 not started
-**Blocker**: Chrome MCP extension not connecting
+**Phase**: 5 - HEAT RUNNER Implementation
+**Progress**: Reference gathering complete, ready for build
+**Next Step**: Begin HEAT RUNNER core mechanics implementation
 
-## What Was Completed
+## What Was Completed This Session
 
-### Phase 0: Foundation (100% Complete)
-1. Created docs/ folder with all documentation
-2. Created reference/ folder structure for all 6 games
-3. Created apps/arcade, apps/factory, packages/game-sdk
-4. Archived existing games to games-archive branch
-5. Updated CLAUDE.md with new architecture
-6. Committed scaffold to main (commit 3b4f53b)
+### HEAT RUNNER Reference Gathering (Bob - Remote)
 
-### Phase 2 Partial: Game SDK Enhanced
-- Added full Supabase integration to game-sdk
-- Implemented initSDK(), fetchLoadout(), track() with real DB calls
-- Built polished Tool Drop UI with animations
-- Added trackGameStart(), trackLevelComplete(), trackGameOver() helpers
-- Created .env.example files for arcade and factory
+1. **sources.md** - 8 reference URLs covering:
+   - Subway Surfers official docs
+   - Gameplay guides and tutorials
+   - Unity clone development tutorials
+   - Power-ups and mechanics breakdown
+
+2. **clone_spec.md** - Full game design doc:
+   - Core loop defined
+   - 3-lane system with instant switching
+   - 5 power-ups mapped to DMI products
+   - Obstacle types and avoid methods
+   - Scoring and milestone system
+   - Tool Drop integration points
+   - UI layout specifications
+   - Technical specs (Phaser 3, 720x1280, <500KB)
+
+3. **frame_index.json** - 10 reference frames defined:
+   - Gameplay, lane switch, jump, slide
+   - Power-up states (jetpack, magnet)
+   - Collision and game over
+   - HUD layout
+
+### DMI Theme Adaptation
+
+| Subway Surfers | HEAT RUNNER (DMI) |
+|----------------|-------------------|
+| Subway tracks | Construction site |
+| Trains | Forklifts, equipment |
+| Hoverboard | Hard Hat Shield |
+| 2x Multiplier | Safety Vest |
+| Coin Magnet | Tool Belt |
+| Speed boost | Drill Boost |
+| Generic coins | Diamond bits |
 
 ## Ready for Next Session
 
-### Option 1: Fix Chrome MCP and Gather References
-1. Install correct Chrome extension: https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn
-2. Start Claude Code with: `claude --chrome`
-3. Run `/chrome` and select "Reconnect extension"
-4. Then capture ASMR CUT reference frames
+### Phase 5 Continued: HEAT RUNNER Build
 
-### Option 2: Skip to Phase 2 (Factory MVP)
-If Chrome MCP continues to be problematic:
-1. Manually gather reference screenshots
-2. Continue building apps/factory with Supabase Auth and CRUD
+1. Set up game scaffold in apps/arcade or new game folder
+2. Implement 3-lane runner mechanics
+3. Add jump and slide controls
+4. Create obstacle spawning system
+5. Add power-ups one by one
+6. Integrate Tool Drop at milestones
+7. Quality gate check vs reference frames
 
-### Option 3: Start Building ASMR CUT
-Skip detailed references and start building the game based on:
-- reference/asmr_cut/storyboard.md
-- reference/asmr_cut/clone_spec.md
-
-## Supabase Setup Required (Manual)
-
-User needs to create Supabase project:
-1. Go to supabase.com, create project "dmi-games"
-2. Run SQL schema (in docs or CLAUDE.md)
-3. Get API keys and create .env files
-
-## Files Modified This Session
-
-- packages/game-sdk/src/index.ts (full Supabase integration)
-- packages/game-sdk/README.md (updated API docs)
-- apps/arcade/.env.example (created)
-- apps/factory/.env.example (created)
-- docs/TASKS.md (Phase 0 marked complete)
-- docs/CHECKPOINT.md (this file)
-- docs/PROGRESS_LOG.md (updated)
-
-## Git Status
-
-- All Phase 0 changes committed and pushed
-- Game SDK enhancements NOT committed yet
-- Run `git status` to see uncommitted changes
-
-## Commands to Resume
+## Commands to Run
 
 ```bash
 cd C:\Users\jarra\projects\dmi-games
-
-# Check status
-git status
-
-# If Chrome MCP needed
-claude --chrome
-
-# Or just continue
-claude
+pnpm dev
+# Then implement HEAT RUNNER
 ```
+
+## Files Created This Session
+
+- reference/heat_runner/sources.md
+- reference/heat_runner/clone_spec.md
+- reference/heat_runner/frame_index.json
+- docs/PROGRESS_LOG.md (updated)
+- docs/TASKS.md (updated)
+- docs/CHECKPOINT.md (this file)

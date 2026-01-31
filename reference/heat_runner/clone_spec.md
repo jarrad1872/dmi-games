@@ -1,107 +1,172 @@
-# HEAT RUNNER - Clone Specification
+﻿# HEAT RUNNER - Clone Specification
 
-## Overview
-**Reference**: Subway Surfers
-**Genre**: Endless Runner
-**Session Length**: 1-3 minutes per run
-**Difficulty Curve**: Gradual speed increase, pattern complexity grows
+## Game Overview
 
----
+**Title**: HEAT RUNNER  
+**Genre**: Endless Runner (Subway Surfers clone)  
+**Theme**: Construction site escape  
+**Target**: Mobile-first, touch controls  
 
-## Mechanics
+## Core Loop
 
-### Primary Mechanic
-**Input**: Swipe left/right/up/down
-**Action**: Lane change (L/R), Jump (up), Slide (down)
-**Feedback**: Instant animation, lane snap, jump arc
+1. Player runs automatically forward
+2. Swipe to dodge obstacles (left/right/up/down)
+3. Collect coins and power-ups
+4. Survive as long as possible
+5. Tool Drop appears at score milestones
+6. Game over on collision → show score + Tool Drop CTA
 
-### Secondary Mechanics
-1. **Magnet**: Pulls coins to player
-2. **Jetpack**: Fly above obstacles
-3. **Multiplier**: 2x coins for duration
+## Visual Style
 
----
+### Color Palette
+- **Primary**: DMI Orange (#FF6B00), Safety Yellow (#FFD700)
+- **Secondary**: Concrete Gray (#808080), Steel Blue (#4682B4)
+- **Accent**: Warning Red (#FF0000), Caution stripes
 
-## Game Objects
+### Environment
+- Construction site with 3 lanes
+- Scaffolding, cranes, buildings in background
+- Parallax scrolling (3-4 layers)
+- Day/night cycle as player progresses
 
-### Player/Tool
-- **Appearance**: Construction worker with DMI gear
-- **States**: Running, Jumping, Sliding, Crashed
-- **Upgrades**: Gear cosmetics, power-up duration
+### Character
+- Construction worker in orange vest + hard hat
+- Run animation: 8 frames
+- Jump animation: 6 frames
+- Slide animation: 4 frames
+- Hit animation: 4 frames
 
-### Targets/Obstacles
-- **Types**:
-  - Static: Barriers, cones, scaffolding
-  - Moving: Forklifts, cranes
-  - Gaps: Trenches, holes
-- **Behaviors**: Pattern-based placement
-- **Spawn Rules**: Speed-based difficulty scaling
+## Controls
+
+### Touch (Primary)
+- Swipe Left: Move to left lane
+- Swipe Right: Move to right lane
+- Swipe Up: Jump
+- Swipe Down: Slide/Roll
+
+### Keyboard (Desktop fallback)
+- A/D or Left/Right: Lane switch
+- W or Space: Jump
+- S or Down: Slide
+
+## Game Mechanics
+
+### Lane System
+- 3 parallel lanes (left, center, right)
+- Instant lane switch (no tween, immediate)
+- Can switch lanes mid-jump
+
+### Speed Progression
+- Start: 8 units/sec
+- Max: 20 units/sec
+- Increase: +0.5 units every 500m
+
+### Obstacles
+
+| Type | Lanes | Avoid Method |
+|------|-------|-------------|
+| Concrete Barrier | 1-2 | Lane switch |
+| Low Scaffold | 1-3 | Jump |
+| High Barrier | 1-2 | Slide |
+| Forklift | 1 | Lane switch |
+| Rebar Stack | 2 | Jump or lane |
+| Wet Cement | 1 | Any (slows) |
 
 ### Collectibles
-- **Coins**: Currency for upgrades
-- **Power-ups**: Magnet, Jetpack, Multiplier
-- **Special**: Blueprint pieces for unlocks
 
----
+| Item | Points | Effect |
+|------|--------|--------|
+| Coin | 1 | Currency |
+| Diamond Bit | 50 | Bonus points |
+| Mystery Box | - | Random power-up |
 
-## Progression
+### Power-Ups
 
-### Level Structure
-- **0-500m**: Tutorial, slow speed
-- **500-2000m**: Normal patterns
-- **2000m+**: High speed, complex combos
+| Power-Up | Duration | Effect | DMI Equivalent |
+|----------|----------|--------|----------------|
+| Hard Hat Shield | 1 hit | Crash protection | Safety gear |
+| Safety Vest | 10s | 2x Score | Visibility |
+| Magnet Belt | 8s | Attract coins | Tool belt |
+| Drill Boost | 5s | Speed + invincible | Core drill |
+| Jetpack | 8s | Fly above track | - |
 
-### Unlock System
-- **Characters**: Coin purchases
-- **Gear**: Blueprint collection
-- **Power-ups**: Upgrade shop
+## Scoring
 
----
+- Distance: 1 point per meter
+- Coins: 1 point each (+ currency)
+- Diamond Bits: 50 points
+- Near misses: +10 bonus
+- Power-up collection: +25
 
-## DMI Integration
+### Milestones (Tool Drop triggers)
+- 500 points: First Tool Drop hint
+- 2000 points: Tool Drop with 10% off
+- 5000 points: Tool Drop with 15% off
+- 10000 points: Tool Drop with 20% off
 
-### Products Featured
-| Product | Role in Game | Unlock Condition |
-|---------|--------------|------------------|
-| Hard Hat | Starting gear | Default |
-| Safety Glasses | Obstacle preview | 500m milestone |
-| Tool Belt | Coin magnet boost | 1000 coins |
-| Hi-Vis Vest | Extra life | 2000m milestone |
+## Audio
 
-### Tool Drop Config
-- **Trigger**: Every 1000m, on death
-- **Product**: Gear just used/unlocked
-- **Context**: "Your gear saved you! Get it for real."
+### Music
+- Upbeat electronic/industrial loop
+- Tempo increases with speed
 
----
+### SFX
+- Lane switch: Whoosh
+- Jump: Spring/boing
+- Slide: Swoosh
+- Coin: Bling
+- Power-up: Power chord
+- Collision: Crash/thud
+- Tool Drop: Celebration jingle
+
+## UI Layout
+
+### HUD (During gameplay)
+```
+[Pause]                    [Coins: 000]
+                           [Score: 00000]
+
+
+
+         [GAME AREA]
+
+
+
+[Power-up slots x3]        [Distance: 000m]
+```
+
+### Game Over Screen
+```
+     GAME OVER!
+     
+     Score: 12,450
+     Best: 18,200
+     Distance: 1,247m
+     Coins: 89
+     
+     [TOOL DROP BANNER]
+     "Power through any job"
+     [Shop DMI Tools →]
+     
+     [Play Again]  [Menu]
+```
 
 ## Technical Specs
 
-### Target Performance
-- **FPS**: 60
-- **File Size**: < 2MB
-- **Load Time**: < 3s
+- **Engine**: Phaser 3 (or vanilla Canvas)
+- **Resolution**: 720x1280 (portrait)
+- **FPS Target**: 60fps
+- **Build Size**: <500KB (single HTML)
+- **Load Time**: <2s on 3G
 
-### Assets Needed
-- **Sprites**: Character, obstacles, coins, power-ups
-- **Audio**: Run sounds, collect, crash, music
-- **Fonts**: Roboto, Roboto Slab
+## Quality Gate Checklist
 
-### Physics
-- **Gravity**: 1200 (quick jumps)
-- **Collision**: Lane-based hitboxes
-- **Particles**: Coin trail, crash effects
-
----
-
-## Frame-by-Frame Quality Targets
-
-| Frame | Element | Target |
-|-------|---------|--------|
-| frame_001 | Title screen | Clear start action |
-| frame_002 | Running gameplay | Smooth 60fps |
-| frame_003 | Lane change | Instant response |
-| frame_004 | Jump over obstacle | Clear arc |
-| frame_005 | Power-up active | Visual effect |
-| frame_006 | Crash sequence | Not jarring |
-| frame_007 | Score screen | Clear stats |
+- [ ] Smooth 60fps on mobile
+- [ ] Instant control response (<16ms)
+- [ ] 3-lane switching works flawlessly
+- [ ] All 5 power-ups functional
+- [ ] Tool Drop appears at milestones
+- [ ] Score persists to localStorage
+- [ ] Audio plays correctly
+- [ ] Game over flow complete
+- [ ] 90% visual match to reference

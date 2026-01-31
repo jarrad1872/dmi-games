@@ -3,10 +3,15 @@
   "version": "2.0.0",
   "description": "Premium HTML5 arcade for DMI Tools Corp",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "pnpm --filter @dmi-games/arcade dev",
-    "dev:factory": "pnpm --filter @dmi-games/factory dev",
-    "build": "pnpm -r build",
+    "dev": "npm run dev --workspace=@dmi-games/arcade",
+    "dev:factory": "npm run dev --workspace=@dmi-games/factory",
+    "build": "npm run build --workspaces --if-present",
+    "build:sdk": "npm run build --workspace=@dmi-games/game-sdk",
     "build:games": "node scripts/build-games.js",
     "serve": "npx serve . -l 3000",
     "legacy:dev": "node scripts/dev.js",
@@ -21,6 +26,5 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  },
-  "packageManager": "pnpm@8.0.0"
+  }
 }

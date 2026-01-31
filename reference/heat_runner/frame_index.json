@@ -1,8 +1,78 @@
-{
-  "game_id": "heat_runner",
-  "reference_game": "Subway Surfers",
-  "capture_date": null,
-  "total_frames": 0,
-  "frames": [],
-  "sources": []
+﻿{
+  "game": "heat_runner",
+  "reference": "Subway Surfers",
+  "frames": [
+    {
+      "id": 1,
+      "name": "gameplay_3lanes",
+      "description": "Standard gameplay showing 3 lanes, runner in center, obstacles ahead",
+      "elements": ["3 lanes", "character running", "obstacles", "coins", "HUD"],
+      "priority": "critical"
+    },
+    {
+      "id": 2,
+      "name": "lane_switch",
+      "description": "Mid-lane-switch animation, character between lanes",
+      "elements": ["lane transition", "motion blur", "swipe indicator"],
+      "priority": "high"
+    },
+    {
+      "id": 3,
+      "name": "jump_action",
+      "description": "Character mid-jump over obstacle",
+      "elements": ["jump arc", "shadow below", "obstacle being cleared"],
+      "priority": "critical"
+    },
+    {
+      "id": 4,
+      "name": "slide_action",
+      "description": "Character sliding under barrier",
+      "elements": ["slide pose", "barrier above", "dust particles"],
+      "priority": "high"
+    },
+    {
+      "id": 5,
+      "name": "powerup_jetpack",
+      "description": "Jetpack active, character flying above track",
+      "elements": ["aerial view", "jetpack flames", "coins in sky", "track below"],
+      "priority": "high"
+    },
+    {
+      "id": 6,
+      "name": "powerup_magnet",
+      "description": "Coin magnet active, coins being attracted",
+      "elements": ["magnet glow", "coin trails", "attraction effect"],
+      "priority": "medium"
+    },
+    {
+      "id": 7,
+      "name": "collision",
+      "description": "Moment of collision with obstacle",
+      "elements": ["impact effect", "character stumble", "obstacle"],
+      "priority": "medium"
+    },
+    {
+      "id": 8,
+      "name": "game_over",
+      "description": "Game over screen with score and buttons",
+      "elements": ["score display", "high score", "play again button", "share button"],
+      "priority": "critical"
+    },
+    {
+      "id": 9,
+      "name": "hud_layout",
+      "description": "Clear view of HUD elements",
+      "elements": ["score counter", "coin counter", "pause button", "power-up slots"],
+      "priority": "high"
+    },
+    {
+      "id": 10,
+      "name": "speed_increase",
+      "description": "Visual effect when speed increases",
+      "elements": ["motion lines", "blur effect", "speed indicator"],
+      "priority": "low"
+    }
+  ],
+  "notes": "Frames to be captured from Subway Surfers gameplay. Focus on mechanics over exact visuals - DMI version will have construction theme.",
+  "status": "pending_capture"
 }

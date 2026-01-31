@@ -1,4 +1,4 @@
-# DMI Tools Arcade - Task Tracking
+﻿# DMI Tools Arcade - Task Tracking
 
 ## Current Phase: Phase 0 - Foundation
 
@@ -12,12 +12,12 @@
 - [x] Initial commit with scaffold
 
 ### Phase 1: Reference Gathering - ASMR CUT
-- [ ] Search for ASMR Slicing / Soap Cutting gameplay references
-- [ ] Capture 7-12 reference frames
-- [ ] Create sources.md with URLs
-- [ ] Create storyboard.md
-- [ ] Create frame_index.json
-- [ ] Generate clone_spec.md
+- [x] Search for ASMR Slicing / Soap Cutting gameplay references
+- [x] Capture 7-12 reference frames (8 frames captured)
+- [x] Create sources.md with URLs
+- [x] Create storyboard.md (existed from Session 1)
+- [x] Create frame_index.json
+- [x] Generate clone_spec.md (existed from Session 1)
 
 ### Phase 2: Factory MVP + Game SDK
 - [ ] Set up Supabase project (manual)
@@ -39,17 +39,17 @@
 - [ ] apps/arcade: Game loader iframe
 - [ ] apps/arcade: Analytics tracking
 
-### Phase 4: Game 1 - ASMR CUT
-- [ ] Core slicing mechanic
-- [ ] Physics + particle effects
-- [ ] Level progression
-- [ ] DMI blade upgrades
-- [ ] Hidden rebar hazard
-- [ ] Tool Drop integration
-- [ ] 90% quality gate check
+### Phase 4: Game 1 - ASMR CUT âœ…
+- [x] Core slicing mechanic
+- [x] Physics + particle effects
+- [x] Level progression
+- [x] DMI blade upgrades
+- [ ] Hidden rebar hazard (deferred to future polish)
+- [x] Tool Drop integration
+- [x] 90% quality gate check (~91% achieved)
 
 ### Phase 5: Game 2 - HEAT RUNNER
-- [ ] Reference gathering
+- [x] Reference gathering
 - [ ] Core runner mechanics
 - [ ] Lane switching
 - [ ] Obstacle generation
@@ -58,7 +58,7 @@
 - [ ] 90% quality gate check
 
 ### Phase 6: Game 3 - IDLE DRILL RIG
-- [ ] Reference gathering
+- [x] Reference gathering
 - [ ] Idle mechanics
 - [ ] Drill upgrades
 - [ ] Core sample collection
@@ -67,7 +67,7 @@
 - [ ] 90% quality gate check
 
 ### Phase 7: Game 4 - PRECISION DEMO
-- [ ] Reference gathering
+- [x] Reference gathering
 - [ ] Physics demolition
 - [ ] Structural simulation
 - [ ] DMI tool selection
@@ -76,7 +76,7 @@
 - [ ] 90% quality gate check
 
 ### Phase 8: Game 5 - ZEN JOB SIM
-- [ ] Reference gathering
+- [x] Reference gathering
 - [ ] Cleaning mechanics
 - [ ] Zone progression
 - [ ] Tool loadouts
@@ -85,7 +85,7 @@
 - [ ] 90% quality gate check
 
 ### Phase 9: Game 6 - RHYTHM CUT
-- [ ] Reference gathering
+- [x] Reference gathering
 - [ ] Beat detection
 - [ ] Note generation
 - [ ] Scoring system
@@ -106,3 +106,4 @@
 - Each game must pass 90% quality gate vs reference frames
 - Update PROGRESS_LOG.md after each work session
 - Update CHECKPOINT.md before ending session
+
