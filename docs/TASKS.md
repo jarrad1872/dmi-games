@@ -50,9 +50,9 @@
 
 ### Phase 5: Game 2 - HEAT RUNNER
 - [x] Reference gathering
-- [ ] Core runner mechanics
-- [ ] Lane switching
-- [ ] Obstacle generation
+- [x] Core runner mechanics
+- [x] Lane switching
+- [x] Obstacle generation
 - [ ] DMI gear integration
 - [ ] Tool Drop integration
 - [ ] 90% quality gate check
@@ -106,4 +106,5 @@
 - Each game must pass 90% quality gate vs reference frames
 - Update PROGRESS_LOG.md after each work session
 - Update CHECKPOINT.md before ending session
+
 

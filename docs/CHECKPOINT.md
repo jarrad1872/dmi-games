@@ -1,76 +1,69 @@
 ﻿# DMI Tools Arcade - Session Checkpoint
 
-> Last Updated: 2026-01-31 (Session 3 - Bob)
+> Last Updated: 2026-01-31 (Session 4 - Bob)
 
 ## Current Status
 
 **Phase**: 5 - HEAT RUNNER Implementation
-**Progress**: Reference gathering complete, ready for build
-**Next Step**: Begin HEAT RUNNER core mechanics implementation
+**Progress**: Core gameplay COMPLETE - ready for testing
+**Next Step**: Test, add power-ups, quality gate
 
 ## What Was Completed This Session
 
-### HEAT RUNNER Reference Gathering (Bob - Remote)
+### HEAT RUNNER Core Build (Bob + Sub-agents)
 
-1. **sources.md** - 8 reference URLs covering:
-   - Subway Surfers official docs
-   - Gameplay guides and tutorials
-   - Unity clone development tutorials
-   - Power-ups and mechanics breakdown
+**12 files created (1,386 lines):**
 
-2. **clone_spec.md** - Full game design doc:
-   - Core loop defined
-   - 3-lane system with instant switching
-   - 5 power-ups mapped to DMI products
-   - Obstacle types and avoid methods
-   - Scoring and milestone system
-   - Tool Drop integration points
-   - UI layout specifications
-   - Technical specs (Phaser 3, 720x1280, <500KB)
+| File | Lines | Purpose |
+|------|-------|--------|
+| Game.ts | 133 | Main game class |
+| scenes/GameScene.ts | 213 | Core 3-lane gameplay |
+| scenes/MenuScene.ts | 101 | Start screen |
+| scenes/Scene.ts | 36 | Base scene class |
+| objects/Player.ts | 168 | Construction worker |
+| objects/Obstacle.ts | 113 | Obstacle class |
+| ui/HUD.ts | 113 | Score/distance display |
+| systems/InputHandler.ts | 167 | Touch + keyboard |
+| systems/ProgressionSystem.ts | 116 | High scores |
+| data/obstacles.ts | 78 | 5 obstacle types |
+| data/powerups.ts | 71 | 5 power-up defs |
+| index.ts | 12 | Export entry |
 
-3. **frame_index.json** - 10 reference frames defined:
-   - Gameplay, lane switch, jump, slide
-   - Power-up states (jetpack, magnet)
-   - Collision and game over
-   - HUD layout
+**Features implemented:**
+- 3-lane system (left: -150, center: 0, right: 150)
+- Auto-running player
+- Swipe left/right for lane change
+- Swipe up for jump, down for slide
+- Keyboard fallback (WASD/Arrows)
+- Obstacle spawning every 2-3 seconds
+- Collision detection with avoid-method logic
+- Speed increases over distance
+- Score/distance/coins HUD
+- Game over screen with high score
+- Menu with animated play button
 
-### DMI Theme Adaptation
-
-| Subway Surfers | HEAT RUNNER (DMI) |
-|----------------|-------------------|
-| Subway tracks | Construction site |
-| Trains | Forklifts, equipment |
-| Hoverboard | Hard Hat Shield |
-| 2x Multiplier | Safety Vest |
-| Coin Magnet | Tool Belt |
-| Speed boost | Drill Boost |
-| Generic coins | Diamond bits |
+**TypeScript: PASSED**
 
 ## Ready for Next Session
 
-### Phase 5 Continued: HEAT RUNNER Build
+### Remaining Phase 5 Tasks
 
-1. Set up game scaffold in apps/arcade or new game folder
-2. Implement 3-lane runner mechanics
-3. Add jump and slide controls
-4. Create obstacle spawning system
-5. Add power-ups one by one
-6. Integrate Tool Drop at milestones
-7. Quality gate check vs reference frames
+1. [ ] Test gameplay in browser
+2. [ ] Add power-up spawning and effects
+3. [ ] Add audio (AudioManager.ts)
+4. [ ] Polish visuals and particles
+5. [ ] Tool Drop integration
+6. [ ] Quality gate check (90% target)
 
-## Commands to Run
+## Commands to Test
 
 ```bash
 cd C:\Users\jarra\projects\dmi-games
 pnpm dev
-# Then implement HEAT RUNNER
+# Open http://localhost:3000 and navigate to Heat Runner
 ```
 
-## Files Created This Session
+## Commits This Session
 
-- reference/heat_runner/sources.md
-- reference/heat_runner/clone_spec.md
-- reference/heat_runner/frame_index.json
-- docs/PROGRESS_LOG.md (updated)
-- docs/TASKS.md (updated)
-- docs/CHECKPOINT.md (this file)
+- 96f0317: Phase 5 reference gathering
+- 54a4b2d: HEAT RUNNER core gameplay complete
