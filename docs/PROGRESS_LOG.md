@@ -2,6 +2,36 @@
 
 ## Session Log
 
+### 2026-01-31 - Session 2: SDK Enhancement + Chrome MCP Troubleshooting
+
+**Phase**: 0 → 1 transition
+
+**Completed**:
+- Enhanced game-sdk with full Supabase integration
+- Added initSDK() for proper initialization
+- Implemented real fetchLoadout() with Supabase queries
+- Implemented real track() with event insertion
+- Built polished Tool Drop UI with slide animations
+- Added convenience functions: trackGameStart, trackLevelComplete, trackGameOver
+- Added getRandomProduct(), isToolDropEnabled(), hideToolDrop()
+- Created .env.example files for arcade and factory
+- Documented full SDK API in README
+
+**Attempted**:
+- Chrome MCP connection for browser automation
+- Extension not connecting (wrong extension or WSL issue)
+
+**Blockers**:
+- Chrome MCP requires correct extension from Chrome Web Store
+- May need to start Claude Code with `claude --chrome` flag
+
+**Next Steps**:
+1. Fix Chrome MCP connection OR gather references manually
+2. Create Supabase project (manual step)
+3. Begin Phase 2: Factory MVP
+
+---
+
 ### 2026-01-30 - Session 1: Foundation Setup
 
 **Phase**: 0 - Foundation
@@ -17,14 +47,13 @@
 - Archived existing games to games-archive branch
 - Updated CLAUDE.md with new architecture and workflow
 - Set up pnpm workspace configuration
+- Committed and pushed scaffold to main
 
 **Blockers**: None
 
 **Next Steps**:
-1. Commit scaffold to main
-2. Run pnpm install
-3. Begin Phase 1: Reference gathering for ASMR CUT
-4. Set up Supabase project (manual step)
+1. Phase 1: Reference gathering for ASMR CUT
+2. Set up Supabase project (manual step)
 
 ---
 

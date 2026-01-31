@@ -1,93 +1,82 @@
 # DMI Tools Arcade - Session Checkpoint
 
-> Last Updated: 2026-01-30
+> Last Updated: 2026-01-31
 
 ## Current Status
 
-**Phase**: 0 - Foundation (COMPLETE)
-**Progress**: 100%
-**Blocker**: None
+**Phase**: 1 - Reference Gathering (BLOCKED on Chrome MCP)
+**Progress**: Phase 0 complete, Phase 1 not started
+**Blocker**: Chrome MCP extension not connecting
 
-## What Was Just Completed
+## What Was Completed
 
-### Phase 0 Complete:
-1. Created docs/ folder with all documentation:
-   - PRD.md
-   - TASKS.md
-   - PROGRESS_LOG.md
-   - CHECKPOINT.md
-   - DECISIONS.md
-
-2. Created reference/ folder structure for all 6 games:
-   - asmr_cut/ (with full storyboard, clone_spec, sources)
-   - heat_runner/
-   - idle_drill_rig/
-   - precision_demo/
-   - zen_job_sim/
-   - rhythm_cut/
-   - template/ (base templates)
-
-3. Created apps/ and packages/ structure:
-   - apps/arcade (Vite SPA)
-   - apps/factory (Next.js admin)
-   - packages/game-sdk (shared SDK with types)
-
-4. Archived existing games:
-   - Created games-archive branch
-   - Pushed to origin
-   - Clean games/ folder with README
-
+### Phase 0: Foundation (100% Complete)
+1. Created docs/ folder with all documentation
+2. Created reference/ folder structure for all 6 games
+3. Created apps/arcade, apps/factory, packages/game-sdk
+4. Archived existing games to games-archive branch
 5. Updated CLAUDE.md with new architecture
+6. Committed scaffold to main (commit 3b4f53b)
 
-6. Updated root package.json for pnpm workspace
+### Phase 2 Partial: Game SDK Enhanced
+- Added full Supabase integration to game-sdk
+- Implemented initSDK(), fetchLoadout(), track() with real DB calls
+- Built polished Tool Drop UI with animations
+- Added trackGameStart(), trackLevelComplete(), trackGameOver() helpers
+- Created .env.example files for arcade and factory
 
-## Ready for Next Phase
+## Ready for Next Session
 
-**Next**: Phase 1 - Reference Gathering (ASMR CUT)
+### Option 1: Fix Chrome MCP and Gather References
+1. Install correct Chrome extension: https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn
+2. Start Claude Code with: `claude --chrome`
+3. Run `/chrome` and select "Reconnect extension"
+4. Then capture ASMR CUT reference frames
 
-Use Chrome MCP to:
-1. Search for ASMR Slicing / Soap Cutting gameplay
-2. Capture 7-12 reference frames
-3. Save to reference/asmr_cut/frames/
-4. Update sources.md, frame_index.json
+### Option 2: Skip to Phase 2 (Factory MVP)
+If Chrome MCP continues to be problematic:
+1. Manually gather reference screenshots
+2. Continue building apps/factory with Supabase Auth and CRUD
 
-## Files Created This Session
+### Option 3: Start Building ASMR CUT
+Skip detailed references and start building the game based on:
+- reference/asmr_cut/storyboard.md
+- reference/asmr_cut/clone_spec.md
 
-### Docs
-- docs/PRD.md
-- docs/TASKS.md
-- docs/PROGRESS_LOG.md
-- docs/CHECKPOINT.md
-- docs/DECISIONS.md
+## Supabase Setup Required (Manual)
 
-### Reference (per game)
-- reference/{game}/storyboard.md
-- reference/{game}/clone_spec.md
-- reference/{game}/frame_index.json
-- reference/{game}/sources/sources.md
+User needs to create Supabase project:
+1. Go to supabase.com, create project "dmi-games"
+2. Run SQL schema (in docs or CLAUDE.md)
+3. Get API keys and create .env files
 
-### Apps
-- apps/arcade/package.json
-- apps/arcade/tsconfig.json
-- apps/arcade/README.md
-- apps/factory/package.json
-- apps/factory/tsconfig.json
-- apps/factory/README.md
+## Files Modified This Session
 
-### Packages
-- packages/game-sdk/package.json
-- packages/game-sdk/tsconfig.json
-- packages/game-sdk/src/index.ts
-- packages/game-sdk/README.md
+- packages/game-sdk/src/index.ts (full Supabase integration)
+- packages/game-sdk/README.md (updated API docs)
+- apps/arcade/.env.example (created)
+- apps/factory/.env.example (created)
+- docs/TASKS.md (Phase 0 marked complete)
+- docs/CHECKPOINT.md (this file)
+- docs/PROGRESS_LOG.md (updated)
 
-### Root
-- pnpm-workspace.yaml
-- package.json (updated)
-- CLAUDE.md (updated)
-- games/README.md
+## Git Status
 
-## Notes
+- All Phase 0 changes committed and pushed
+- Game SDK enhancements NOT committed yet
+- Run `git status` to see uncommitted changes
 
-- Supabase project needs to be created manually
-- Run `pnpm install` after initial commit
-- Phase 1 will use Chrome MCP for reference capture
+## Commands to Resume
+
+```bash
+cd C:\Users\jarra\projects\dmi-games
+
+# Check status
+git status
+
+# If Chrome MCP needed
+claude --chrome
+
+# Or just continue
+claude
+```
