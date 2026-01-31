@@ -1,0 +1,99 @@
+{
+  "game_id": "asmr_cut",
+  "reference_game": "ASMR Slicing / Soap Cutting Simulator",
+  "capture_date": null,
+  "total_frames": 0,
+  "frames": [
+    {
+      "id": "frame_001",
+      "filename": "frame_001.png",
+      "category": "menu",
+      "description": "Object selection grid",
+      "key_elements": [
+        "Object thumbnails",
+        "Lock icons for uncollected",
+        "Coin/currency display"
+      ],
+      "quality_targets": [
+        "Clean grid layout",
+        "Clear unlock states"
+      ]
+    },
+    {
+      "id": "frame_002",
+      "filename": "frame_002.png",
+      "category": "gameplay",
+      "description": "Object on cutting surface, slice starting",
+      "key_elements": [
+        "3D object render",
+        "Blade/finger position",
+        "Cut indicator"
+      ],
+      "quality_targets": [
+        "Object fills screen nicely",
+        "Touch point visible"
+      ]
+    },
+    {
+      "id": "frame_003",
+      "filename": "frame_003.png",
+      "category": "gameplay",
+      "description": "Mid-slice with trail effect",
+      "key_elements": [
+        "Slice trail following finger",
+        "Object deformation hint",
+        "Particle spray"
+      ],
+      "quality_targets": [
+        "Smooth trail rendering",
+        "60fps during slice"
+      ]
+    },
+    {
+      "id": "frame_004",
+      "filename": "frame_004.png",
+      "category": "feedback",
+      "description": "Slice complete - object splits",
+      "key_elements": [
+        "Two halves separating",
+        "Cross-section visible",
+        "Particle burst"
+      ],
+      "quality_targets": [
+        "Satisfying separation",
+        "Physics feel weighty"
+      ]
+    },
+    {
+      "id": "frame_005",
+      "filename": "frame_005.png",
+      "category": "feedback",
+      "description": "Score/reward popup",
+      "key_elements": [
+        "Coin animation",
+        "Star rating",
+        "Next button"
+      ],
+      "quality_targets": [
+        "Clear feedback",
+        "Celebration feel"
+      ]
+    },
+    {
+      "id": "frame_006",
+      "filename": "frame_006.png",
+      "category": "upgrade",
+      "description": "Blade upgrade shop",
+      "key_elements": [
+        "Blade options",
+        "Prices",
+        "Current blade indicator"
+      ],
+      "quality_targets": [
+        "DMI branding visible",
+        "Clear upgrade path"
+      ]
+    }
+  ],
+  "sources": []
+}

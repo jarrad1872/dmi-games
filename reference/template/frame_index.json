@@ -1,0 +1,64 @@
+{
+  "game_id": "[GAME_ID]",
+  "reference_game": "[REFERENCE_NAME]",
+  "capture_date": null,
+  "total_frames": 0,
+  "frames": [
+    {
+      "id": "frame_001",
+      "filename": "frame_001.png",
+      "category": "menu",
+      "description": "Main menu / title screen",
+      "key_elements": [
+        "Logo placement",
+        "Start button",
+        "Settings icon"
+      ],
+      "quality_targets": [
+        "Clean layout",
+        "Brand colors visible"
+      ]
+    },
+    {
+      "id": "frame_002",
+      "filename": "frame_002.png",
+      "category": "gameplay",
+      "description": "Gameplay start",
+      "key_elements": [],
+      "quality_targets": []
+    },
+    {
+      "id": "frame_003",
+      "filename": "frame_003.png",
+      "category": "gameplay",
+      "description": "Mid-action moment",
+      "key_elements": [],
+      "quality_targets": []
+    },
+    {
+      "id": "frame_004",
+      "filename": "frame_004.png",
+      "category": "feedback",
+      "description": "Success/reward feedback",
+      "key_elements": [],
+      "quality_targets": []
+    },
+    {
+      "id": "frame_005",
+      "filename": "frame_005.png",
+      "category": "progression",
+      "description": "Level complete / progression",
+      "key_elements": [],
+      "quality_targets": []
+    },
+    {
+      "id": "frame_006",
+      "filename": "frame_006.png",
+      "category": "upgrade",
+      "description": "Upgrade/shop screen",
+      "key_elements": [],
+      "quality_targets": []
+    }
+  ],
+  "sources": []
+}

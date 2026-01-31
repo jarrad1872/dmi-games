@@ -1,168 +1,161 @@
-# CLAUDE.md - DMI Games Development Guide
+# CLAUDE.md
 
-This repo contains arcade games for DMI Tools Corp. You're helping build and modify games using Phaser 3.
+This file provides guidance to Claude Code when working with this repository.
 
-## Project Structure
+## Overview
+
+Premium HTML5 arcade for DMI Tools Corp. Features 6 reference-quality games with integrated product marketing via the Tool Drop system. Uses a hybrid architecture: TypeScript development with single-file HTML deployment.
+
+## Architecture
 
 ```
-dmi-games/
-├── templates/           # Base game templates (start here for new games)
-│   ├── runner/         # Endless runner template
-│   ├── match3/         # Match-3 puzzle template
-│   └── flappy/         # Flappy-style template
-├── games/              # Finished/customized games (deployed to games.dmitools.com)
-│   ├── core-drop/      # Core drilling game
-│   ├── drill-tycoon/   # Idle clicker
-│   └── ...
-├── scripts/            # Dev tools
-├── public/             # Shared assets
-└── index.html          # Arcade portal (games.dmitools.com homepage)
+/apps
+  /arcade              # Vite SPA - game portal + routes
+  /factory             # Next.js - admin dashboard for loadouts
+/packages
+  /game-sdk            # Shared TS: loadout, promo engine, Tool Drop UI
+/reference
+  /{game_name}/        # Clone Pack per game (sources, frames, specs)
+/games                 # Built games (single HTML each)
+/docs                  # PRD, TASKS, PROGRESS_LOG, CHECKPOINT, DECISIONS
+```
+
+## Commands
+
+```bash
+pnpm dev              # Start arcade dev server
+pnpm dev:factory      # Start factory admin dev server
+pnpm build            # Build all packages
+pnpm build:games      # Compile games to single-file HTML
+
+# Legacy (for old workflow)
+pnpm legacy:dev       # Old Phaser dev server
+pnpm legacy:build     # Old game validation
 ```
 
 ## Development Workflow
 
-### 1. Start Dev Server
-```bash
-npm run dev
-# Opens http://localhost:3000
+1. **Reference First**: Before building a game, gather reference frames in `reference/{game}/frames/`
+2. **Clone Spec**: Define mechanics and DMI integration in `clone_spec.md`
+3. **Build Game**: Implement in TypeScript using game-sdk
+4. **Quality Gate**: Compare against reference frames (90% match required)
+5. **Deploy**: Build to single HTML, auto-deploys to games.dmitools.com
+
+## Game SDK Usage
+
+```typescript
+import {
+  fetchLoadout,
+  initPromoEngine,
+  showToolDrop,
+  track
+} from '@dmi-games/game-sdk';
+
+// On game load
+const loadout = await fetchLoadout('asmr_cut');
+initPromoEngine(loadout);
+
+// At milestone
+showToolDrop(loadout.products[0]);
+
+// Analytics
+track('level_complete', { level: 5, score: 1000 });
 ```
 
-### 2. Create New Game
-```bash
-# Copy a template
-cp -r templates/runner games/my-new-game
-
-# Edit games/my-new-game/index.html
-```
-
-### 3. Test Locally
-- Visit http://localhost:3000/games/my-new-game/
-- Changes auto-reload
-
-### 4. Deploy
-```bash
-git add .
-git commit -m "Add my-new-game"
-git push
-# Auto-deploys to games.dmitools.com via Vercel
-```
-
-## Game Requirements
-
-### All games MUST have:
-- **DMI branding** - Red (#A62022), logo, "Made in USA"
-- **Mobile-first** - Touch controls, responsive canvas
-- **Single HTML file** - Self-contained, no external dependencies except Phaser CDN
-- **Promo integration** - CTA button linking to dmitools.com products
-- **Score system** - Leaderboard-ready (localStorage for now)
-
-### Standard Structure (per game)
-```html
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Game Name - DMI Tools</title>
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
-</head>
-<body>
-  <div id="game-container"></div>
-  <script>
-    // Game CONFIG at top for easy tweaking
-    const CONFIG = {
-      difficulty: 1,
-      playerSpeed: 200,
-      spawnRate: 2000,
-      // ... all tunable values here
-    };
-    
-    // Phaser game code...
-  </script>
-</body>
-</html>
-```
-
-## DMI Brand Guidelines
+## Brand Requirements
 
 ### Colors
-- **Primary Red:** #A62022
-- **Black:** #222222
-- **White:** #FFFFFF
-- **Accent Gold:** #FFD700
+- **Primary**: Red #a61c00, Black #000000, White #ffffff, Blue #0033A0
+- **Secondary**: Light Gray #efefef, Middle Gray #b7b7b7, Dark Gray #666666
 
-### Products to Feature
-- Core Bits (drilling)
-- Diamond Blades (cutting)
-- Slurry Rings (accessories)
-- Drill Motors (equipment)
+### Typography
+- **Titles**: Roboto Slab
+- **Body**: Roboto
 
-### CTA Examples
-- "Shop Core Bits → dmitools.com"
-- "Use code GAME15 for 15% off!"
+### Tone
+Funny, edgy, contractor-forward.
 
-## Common Tasks
+## Quality Gates
 
-### "Make it faster/harder"
-Modify the CONFIG object at the top of the game file:
-```javascript
-const CONFIG = {
-  playerSpeed: 300,    // was 200
-  spawnRate: 1500,     // was 2000 (lower = more frequent)
-  gravity: 1000,       // was 800
-};
+Every game must:
+1. Hit 90% match vs reference frames
+2. Run at 60fps on mid-tier mobile
+3. Include natural DMI product integration
+4. Support Tool Drop promotional system
+5. Build to < 2MB single HTML file
+
+## Session Management
+
+Before starting work:
+1. Read `docs/CHECKPOINT.md` for current state
+2. Check `docs/TASKS.md` for next actions
+3. Review relevant `reference/{game}/` materials
+
+After completing work:
+1. Update `docs/CHECKPOINT.md` with current state
+2. Mark completed items in `docs/TASKS.md`
+3. Append to `docs/PROGRESS_LOG.md`
+4. Log decisions in `docs/DECISIONS.md`
+
+## Game Roster
+
+| Game | Reference | Status |
+|------|-----------|--------|
+| ASMR CUT | ASMR Slicing | Reference gathering |
+| HEAT RUNNER | Subway Surfers | Pending |
+| IDLE DRILL RIG | Idle Miner Tycoon | Pending |
+| PRECISION DEMO | Teardown | Pending |
+| ZEN JOB SIM | PowerWash Simulator | Pending |
+| RHYTHM CUT | Beat Saber | Pending |
+
+## Supabase Schema
+
+```sql
+-- Products (synced from Shopify)
+CREATE TABLE products (
+  id UUID PRIMARY KEY,
+  name TEXT NOT NULL,
+  sku TEXT UNIQUE,
+  shopify_url TEXT NOT NULL,
+  image_url TEXT,
+  category TEXT
+);
+
+-- Game loadouts
+CREATE TABLE loadouts (
+  id UUID PRIMARY KEY,
+  game_id TEXT NOT NULL UNIQUE,
+  products JSONB DEFAULT '[]',
+  promo_banner JSONB,
+  feature_flags JSONB DEFAULT '{}'
+);
+
+-- Analytics events
+CREATE TABLE events (
+  id UUID PRIMARY KEY,
+  game_id TEXT NOT NULL,
+  event_name TEXT NOT NULL,
+  properties JSONB DEFAULT '{}',
+  session_id TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Game catalog
+CREATE TABLE games (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT,
+  icon TEXT,
+  status TEXT DEFAULT 'draft'
+);
 ```
-
-### "Add a power-up"
-1. Create texture in preload()
-2. Add to spawn system
-3. Handle collision with player
-4. Apply effect (speed boost, invincibility, etc.)
-
-### "Change the theme"
-1. Update color constants
-2. Modify preload() textures
-3. Update background in create()
-
-### "Add mobile controls"
-```javascript
-// Touch anywhere to jump
-this.input.on('pointerdown', () => this.jump());
-
-// Swipe detection
-let startX, startY;
-this.input.on('pointerdown', (p) => { startX = p.x; startY = p.y; });
-this.input.on('pointerup', (p) => {
-  const dx = p.x - startX;
-  const dy = p.y - startY;
-  if (Math.abs(dx) > Math.abs(dy)) {
-    dx > 0 ? this.moveRight() : this.moveLeft();
-  } else {
-    dy < 0 ? this.jump() : this.duck();
-  }
-});
-```
-
-## Testing Checklist
-
-Before pushing a game:
-- [ ] Works on mobile (test with Chrome DevTools device mode)
-- [ ] Touch controls work
-- [ ] Score saves to localStorage
-- [ ] DMI branding visible
-- [ ] CTA button works
-- [ ] No console errors
-- [ ] Loads in < 3 seconds
 
 ## Deployment
 
-- **games.dmitools.com** - Auto-deploys from `main` branch via Vercel
-- **factory.dmitools.com** - Pulls templates for the game builder UI
+Push to `main` auto-deploys to games.dmitools.com via Vercel.
 
-Push to main = live in ~60 seconds.
+## Phase Tracking
 
-## Resources
+Current: **Phase 0 - Foundation**
 
-- [Phaser 3 Docs](https://photonstorm.github.io/phaser3-docs/)
-- [Phaser 3 Examples](https://phaser.io/examples)
-- [DMI Tools Website](https://dmitools.com)
+See `docs/TASKS.md` for detailed phase breakdown.

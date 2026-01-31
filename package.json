@@ -1,11 +1,16 @@
 {
   "name": "dmi-games",
-  "version": "1.0.0",
-  "description": "Arcade games for DMI Tools Corp",
+  "version": "2.0.0",
+  "description": "Premium HTML5 arcade for DMI Tools Corp",
+  "private": true,
   "scripts": {
-    "dev": "node scripts/dev.js",
-    "build": "node scripts/build.js",
-    "serve": "npx serve . -l 3000"
+    "dev": "pnpm --filter @dmi-games/arcade dev",
+    "dev:factory": "pnpm --filter @dmi-games/factory dev",
+    "build": "pnpm -r build",
+    "build:games": "node scripts/build-games.js",
+    "serve": "npx serve . -l 3000",
+    "legacy:dev": "node scripts/dev.js",
+    "legacy:build": "node scripts/build.js"
   },
   "keywords": ["games", "phaser", "arcade", "dmi-tools"],
   "author": "DMI Tools Corp",
@@ -13,5 +18,9 @@
   "devDependencies": {
     "chokidar": "^3.5.3",
     "ws": "^8.14.2"
-  }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "packageManager": "pnpm@8.0.0"
 }
