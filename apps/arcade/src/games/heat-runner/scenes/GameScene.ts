@@ -1,4 +1,4 @@
-﻿/**
+/**
  * GameScene - Polished core gameplay with layered rendering
  */
 
@@ -178,6 +178,19 @@ export class GameScene extends Scene {
       const horizontalDist = Math.abs(this.player.x - obstacle.x);
       if (horizontalDist < this.nearMissThreshold && obstacle.lane !== this.player.lane) {
         this.screenEffects.triggerNearMiss();
+        this.game.getAudio().playNearMiss(); // AUDIO
+        // ENHANCED: Particles on near miss
+        this.particles.emit({
+          x: this.player.x,
+          y: this.player.y - 40,
+          count: 8,
+          type: 'spark',
+          spread: 30,
+          speed: 120,
+          color: '#FFD700',
+          size: 4,
+          life: 300,
+        });
         // Bonus points for near miss
         this.score += 5;
       }
@@ -197,14 +210,27 @@ export class GameScene extends Scene {
   private gameOver(): void {
     this.isGameOver = true;
     this.player.hit();
+    this.game.getAudio().playHit(); // AUDIO
     
-    // Screen effects
-    this.screenEffects.shake(15, 400);
-    this.screenEffects.flash('#ff0000', 0.4);
+    // ENHANCED: Screen effects with MORE PUNCH
+    this.screenEffects.shake(25, 500); // Bigger shake
+    this.screenEffects.flash('#ff0000', 0.6); // Brighter flash
     
-    // Particles
+    // ENHANCED: MORE particles
     this.particles.emitHitSparks(this.player.x, this.player.y - 50);
     this.particles.emitDebris(this.player.x, this.player.y - 30);
+    // Extra impact particles
+    this.particles.emit({
+      x: this.player.x,
+      y: this.player.y - 40,
+      count: 30,
+      type: 'spark',
+      spread: 60,
+      speed: 250,
+      color: '#FF4500',
+      size: 6,
+      life: 800,
+    });
   }
   
   render(ctx: CanvasRenderingContext2D): void {
@@ -269,8 +295,10 @@ export class GameScene extends Scene {
     ctx.fillRect(0, roadY, width, roadHeight);
     
     // Lane markers
-    ctx.strokeStyle = '#FFD700';
-    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#FFEE00'; // ENHANCED: Brighter yellow
+    ctx.lineWidth = 5;
+    ctx.shadowColor = '#FFEE00';
+    ctx.shadowBlur = 15;
     ctx.setLineDash([30, 25]);
     ctx.lineDashOffset = -this.trackOffset;
     
@@ -290,16 +318,22 @@ export class GameScene extends Scene {
   private renderEdgeStripes(ctx: CanvasRenderingContext2D, width: number, height: number, roadY: number): void {
     // Left edge
     for (let y = -this.trackOffset; y < height - roadY; y += 40) {
-      ctx.fillStyle = '#FF6B00';
+      ctx.fillStyle = '#FF8800'; // ENHANCED: Brighter orange
+      ctx.shadowColor = '#FF8800';
+      ctx.shadowBlur = 10;
       ctx.fillRect(0, roadY + y, 12, 20);
+      ctx.shadowBlur = 0;
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, roadY + y + 20, 12, 20);
     }
     
-    // Right edge
+    // Right edge (ENHANCED)
     for (let y = -this.trackOffset + 20; y < height - roadY; y += 40) {
-      ctx.fillStyle = '#FF6B00';
+      ctx.fillStyle = '#FF8800';
+      ctx.shadowColor = '#FF8800';
+      ctx.shadowBlur = 10;
       ctx.fillRect(width - 12, roadY + y, 12, 20);
+      ctx.shadowBlur = 0;
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(width - 12, roadY + y + 20, 12, 20);
     }
@@ -317,9 +351,11 @@ export class GameScene extends Scene {
         break;
       case 'up':
         this.player.jump();
+        this.game.getAudio().playJump(); // AUDIO
         break;
       case 'down':
         this.player.slide();
+        this.game.getAudio().playSlide(); // AUDIO
         break;
     }
   }
@@ -330,3 +366,12 @@ export class GameScene extends Scene {
     }
   }
 }
+
+
+
+
+
+
+
+
+

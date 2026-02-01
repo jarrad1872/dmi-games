@@ -1,4 +1,4 @@
-﻿/**
+/**
  * HEAT RUNNER - Main Game Class
  * Manages game loop, scenes, and core systems
  */
@@ -8,6 +8,7 @@ import { MenuScene } from './scenes/MenuScene';
 import { GameScene } from './scenes/GameScene';
 import { ProgressionSystem } from './systems/ProgressionSystem';
 import { InputHandler, SwipeDirection } from './systems/InputHandler';
+import { AudioSystem } from './systems/AudioSystem';
 import {
   initSDK,
   fetchLoadout,
@@ -30,6 +31,7 @@ export class Game {
   // Core systems
   private progression: ProgressionSystem;
   private inputHandler: InputHandler;
+  private audio: AudioSystem;
 
   // Game loop
   private lastTime: number = 0;
@@ -50,6 +52,7 @@ export class Game {
     // Initialize systems
     this.progression = new ProgressionSystem();
     this.inputHandler = new InputHandler(canvas);
+    this.audio = new AudioSystem();
 
     // Setup input callbacks
     this.inputHandler.setCallbacks({
@@ -159,6 +162,11 @@ export class Game {
   getCanvas(): HTMLCanvasElement { return this.canvas; }
   getContext(): CanvasRenderingContext2D { return this.ctx; }
   getProgression(): ProgressionSystem { return this.progression; }
+  getAudio(): AudioSystem { return this.audio; }
   getLoadout(): LoadoutConfig | null { return this.loadout; }
   getCurrentSceneName(): SceneName { return this.currentSceneName; }
 }
+
+
+
+

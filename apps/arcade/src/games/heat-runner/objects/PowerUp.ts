@@ -81,13 +81,13 @@ export class PowerUp {
 
     ctx.save();
 
-    // Glow effect
-    const glowRadius = 30 + this.glowIntensity * 15;
+    // ENHANCED: Bigger, brighter glow
+    const glowRadius = 40 + this.glowIntensity * 20;
     const gradient = ctx.createRadialGradient(
       centerX, centerY, 0,
       centerX, centerY, glowRadius
     );
-    gradient.addColorStop(0, this.color + '80');
+    gradient.addColorStop(0, this.color + 'AA'); // Brighter glow
     gradient.addColorStop(1, this.color + '00');
     ctx.fillStyle = gradient;
     ctx.fillRect(
@@ -97,12 +97,15 @@ export class PowerUp {
       glowRadius * 2
     );
 
-    // Main shape - hexagon for power-ups
+    // ENHANCED: Pulsing hexagon for power-ups
+    const sizePulse = 1 + this.glowIntensity * 0.15; // Pulse size
     ctx.fillStyle = this.color;
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 20;
     ctx.beginPath();
     for (let i = 0; i < 6; i++) {
       const angle = (i * Math.PI * 2) / 6 - Math.PI / 2;
-      const radius = this.width / 2 - 5;
+      const radius = (this.width / 2 - 5) * sizePulse;
       const px = centerX + Math.cos(angle) * radius;
       const py = centerY + Math.sin(angle) * radius;
       if (i === 0) {
@@ -114,10 +117,16 @@ export class PowerUp {
     ctx.closePath();
     ctx.fill();
 
-    // Border
+    // ENHANCED: Thicker, glowing border
+    ctx.shadowBlur = 0;
     ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 4;
     ctx.stroke();
+    ctx.shadowColor = '#fff';
+    ctx.shadowBlur = 15;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
 
     // Icon based on effect type
     ctx.fillStyle = '#fff';
@@ -138,3 +147,6 @@ export class PowerUp {
     ctx.restore();
   }
 }
+
+
+
