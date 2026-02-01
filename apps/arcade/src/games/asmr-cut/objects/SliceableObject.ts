@@ -99,23 +99,23 @@ export class SliceableObject {
 
     // Dispatch to specific renderer based on object type
     switch (this.definition.id) {
-      case 'foam_block':
-        this.renderFoamBlock(ctx);
+      case 'drywall':
+        this.renderDrywall(ctx);
         break;
-      case 'soap':
-        this.renderSoap(ctx);
+      case 'cement_board':
+        this.renderCementBoard(ctx);
         break;
-      case 'gel_pad':
-        this.renderGelPad(ctx);
+      case 'asphalt_patch':
+        this.renderAsphalt(ctx);
         break;
-      case 'kinetic_sand':
-        this.renderKineticSand(ctx);
+      case 'mortar_block':
+        this.renderMortar(ctx);
         break;
-      case 'clay':
-        this.renderClay(ctx);
+      case 'thinset_tile':
+        this.renderThinSet(ctx);
         break;
-      case 'insulation':
-        this.renderInsulation(ctx);
+      case 'fiber_cement':
+        this.renderFiberCite(ctx);
         break;
       case 'concrete':
       case 'reinforced_concrete':
@@ -127,6 +127,15 @@ export class SliceableObject {
         break;
       case 'brick':
         this.renderBrick(ctx);
+        break;
+      case 'rubber':
+        this.renderRubber(ctx);
+        break;
+      case 'wax':
+        this.renderWax(ctx);
+        break;
+      case 'wood':
+        this.renderWood(ctx);
         break;
       default:
         this.renderGeneric(ctx);

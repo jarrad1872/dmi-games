@@ -33,16 +33,16 @@ export interface ParticleEmitterConfig {
   type: 'circle' | 'square' | 'spark';
 }
 
-// Bright, satisfying colors matching Soap Cutting reference
+// Industrial dust colors for concrete cutting
 export const BURST_COLORS = [
-  '#ff6b9d', // Pink
-  '#00e5ff', // Cyan
-  '#ffeb3b', // Yellow
-  '#69f0ae', // Green
-  '#ff8a65', // Orange
-  '#b388ff', // Purple
-  '#64ffda', // Teal
-  '#ffd54f', // Gold
+  '#888888', // Medium gray
+  '#999999', // Light gray
+  '#aaaaaa', // Lighter gray
+  '#777777', // Dark gray
+  '#666666', // Darker gray
+  '#bbbbbb', // Very light gray (concrete dust)
+  '#9a9a9a', // Mid gray
+  '#7d7d7d', // Gray-brown
 ];
 
 const DEFAULT_CONFIG: ParticleEmitterConfig = {
