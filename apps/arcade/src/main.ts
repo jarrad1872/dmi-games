@@ -1,11 +1,16 @@
-/**
- * ASMR CUT - Main Entry Point
- * DMI Games Arcade
+﻿/**
+ * DMI Games Arcade - Main Entry Point
+ * Supports: asmr-cut, heat-runner, precision-demo, zen-job-sim
  */
 
-import { Game } from './games/asmr-cut';
+// Game selector - change this to switch games
+const ACTIVE_GAME = 'zen-job-sim'; // 'asmr-cut' | 'heat-runner' | 'precision-demo' | 'zen-job-sim'
 
-// Wait for DOM to be ready
+import { Game as AsmrCutGame } from './games/asmr-cut';
+import { Game as HeatRunnerGame } from './games/heat-runner';
+import { Game as PrecisionDemoGame } from './games/precision-demo';
+import { Game as ZenJobSimGame } from './games/zen-job-sim';
+
 document.addEventListener('DOMContentLoaded', () => {
   const canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
   const loadingScreen = document.getElementById('loading-screen');
@@ -15,30 +20,35 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  // Create and start game
-  const game = new Game(canvas);
+  // Select game based on ACTIVE_GAME constant
+  let GameClass;
+  if (ACTIVE_GAME === 'zen-job-sim') {
+    GameClass = ZenJobSimGame;
+  } else if (ACTIVE_GAME === 'precision-demo') {
+    GameClass = PrecisionDemoGame;
+  } else if (ACTIVE_GAME === 'heat-runner') {
+    GameClass = HeatRunnerGame;
+  } else {
+    GameClass = AsmrCutGame;
+  }
 
-  // Initialize the game
+  const game = new GameClass(canvas);
+
   game.init().then(() => {
-    // Hide loading screen with fade
     if (loadingScreen) {
       loadingScreen.classList.add('hidden');
       setTimeout(() => {
         loadingScreen.style.display = 'none';
       }, 500);
     }
-
-    // Start game loop
     game.start();
   }).catch((err) => {
     console.error('Failed to initialize game:', err);
   });
 
-  // Handle window resize
   window.addEventListener('resize', () => {
     game.resize();
   });
 
-  // Prevent context menu on long press
   canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 });
