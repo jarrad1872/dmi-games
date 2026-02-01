@@ -1,6 +1,6 @@
 ﻿/**
  * Obstacle Definitions
- * Different types of obstacles for the runner
+ * Construction site obstacles with visual variety
  */
 
 export type AvoidMethod = 'lane' | 'jump' | 'slide' | 'any';
@@ -18,53 +18,53 @@ export interface ObstacleDefinition {
 
 export const OBSTACLES: ObstacleDefinition[] = [
   {
-    id: 'concrete_barrier',
+    id: 'barrier',
     name: 'Concrete Barrier',
-    width: 80,
-    height: 100,
-    color: '#808080',
-    avoidMethod: 'lane',
+    width: 70,
+    height: 50,
+    color: '#4A4A4A',
+    avoidMethod: 'jump',
     lanes: 1,
     spawnWeight: 30,
   },
   {
-    id: 'low_scaffold',
-    name: 'Low Scaffold',
-    width: 120,
-    height: 40,
-    color: '#8B4513',
-    avoidMethod: 'jump',
-    lanes: 2,
-    spawnWeight: 25,
-  },
-  {
-    id: 'high_barrier',
-    name: 'High Barrier',
-    width: 100,
+    id: 'scaffold',
+    name: 'Scaffold Frame',
+    width: 80,
     height: 120,
-    color: '#FFD700',
+    color: '#666666',
     avoidMethod: 'slide',
     lanes: 1,
-    spawnWeight: 20,
+    spawnWeight: 25,
   },
   {
     id: 'forklift',
     name: 'Forklift',
-    width: 90,
-    height: 110,
-    color: '#FF6B00',
+    width: 75,
+    height: 90,
+    color: '#FFD700',
     avoidMethod: 'lane',
+    lanes: 1,
+    spawnWeight: 20,
+  },
+  {
+    id: 'rebar',
+    name: 'Rebar Bundle',
+    width: 60,
+    height: 80,
+    color: '#8B4513',
+    avoidMethod: 'jump',
     lanes: 1,
     spawnWeight: 15,
   },
   {
-    id: 'rebar_stack',
-    name: 'Rebar Stack',
-    width: 100,
-    height: 60,
-    color: '#4A4A4A',
-    avoidMethod: 'any',
-    lanes: 2,
+    id: 'wet_cement',
+    name: 'Wet Cement',
+    width: 90,
+    height: 30,
+    color: '#808080',
+    avoidMethod: 'jump',
+    lanes: 1,
     spawnWeight: 10,
   },
 ];
