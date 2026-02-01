@@ -446,43 +446,30 @@ export class GameScene extends Scene {
 
     // Cut preview line (dotted) from start to end
     ctx.setLineDash([8, 8]);
-    ctx.strokeStyle = 'rgba(100, 100, 100, 0.6)';
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(100, 100, 100, 0.5)';
+    ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(startPoint.x, startPoint.y);
     ctx.lineTo(endPoint.x, endPoint.y);
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Scissors icon at start point
-    this.drawScissorsIcon(ctx, startPoint.x, startPoint.y, startPoint, endPoint);
-
-    // Trail glow
-    ctx.strokeStyle = blade.glowColor;
-    ctx.lineWidth = 15;
-    ctx.globalAlpha = 0.3;
-    ctx.beginPath();
-    ctx.moveTo(this.trailPoints[0].x, this.trailPoints[0].y);
-    for (let i = 1; i < this.trailPoints.length; i++) {
-      ctx.lineTo(this.trailPoints[i].x, this.trailPoints[i].y);
-    }
-    ctx.stroke();
-
-    // Trail core
-    ctx.strokeStyle = blade.color;
-    ctx.lineWidth = 6;
-    ctx.globalAlpha = 0.8;
-    ctx.beginPath();
-    ctx.moveTo(this.trailPoints[0].x, this.trailPoints[0].y);
-    for (let i = 1; i < this.trailPoints.length; i++) {
-      ctx.lineTo(this.trailPoints[i].x, this.trailPoints[i].y);
-    }
-    ctx.stroke();
-
-    // Trail center (bright)
+    // Small circle indicator at the end point
+    ctx.fillStyle = '#64b5f6';
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
-    ctx.globalAlpha = 1;
+    ctx.beginPath();
+    ctx.arc(endPoint.x, endPoint.y, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Draw knife at the current swipe position (end of trail)
+    this.drawKnife(ctx, endPoint.x, endPoint.y, startPoint, endPoint);
+
+    // Trail glow (subtle)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.lineWidth = 8;
+    ctx.globalAlpha = 0.5;
     ctx.beginPath();
     ctx.moveTo(this.trailPoints[0].x, this.trailPoints[0].y);
     for (let i = 1; i < this.trailPoints.length; i++) {
@@ -493,7 +480,7 @@ export class GameScene extends Scene {
     ctx.restore();
   }
 
-  private drawScissorsIcon(
+  private drawKnife(
     ctx: CanvasRenderingContext2D,
     x: number,
     y: number,
@@ -503,53 +490,89 @@ export class GameScene extends Scene {
     ctx.save();
     ctx.translate(x, y);
 
-    // Calculate angle from start to end
+    // Calculate angle from start to end, knife points in travel direction
     const angle = Math.atan2(end.y - start.y, end.x - start.x);
-    ctx.rotate(angle);
+    ctx.rotate(angle + Math.PI / 4); // Tilt knife slightly
 
-    const size = 18;
+    // Knife dimensions
+    const bladeLength = 60;
+    const bladeWidth = 12;
+    const handleLength = 45;
+    const handleWidth = 16;
 
-    // Scissors handles (red/pink circles)
-    ctx.fillStyle = '#e53935';
+    // Shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
     ctx.beginPath();
-    ctx.ellipse(-size * 0.8, -size * 0.5, size * 0.35, size * 0.25, 0.3, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(-size * 0.8, size * 0.5, size * 0.35, size * 0.25, -0.3, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Handle holes
-    ctx.fillStyle = '#ffcdd2';
-    ctx.beginPath();
-    ctx.ellipse(-size * 0.8, -size * 0.5, size * 0.18, size * 0.12, 0.3, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(-size * 0.8, size * 0.5, size * 0.18, size * 0.12, -0.3, 0, Math.PI * 2);
+    ctx.ellipse(20, 15, 35, 8, 0.3, 0, Math.PI * 2);
     ctx.fill();
 
-    // Blades (silver)
-    ctx.fillStyle = '#90a4ae';
+    // Blade (silver with gradient)
+    const bladeGradient = ctx.createLinearGradient(0, -bladeWidth / 2, 0, bladeWidth / 2);
+    bladeGradient.addColorStop(0, '#f5f5f5');
+    bladeGradient.addColorStop(0.3, '#e0e0e0');
+    bladeGradient.addColorStop(0.5, '#bdbdbd');
+    bladeGradient.addColorStop(0.7, '#e0e0e0');
+    bladeGradient.addColorStop(1, '#9e9e9e');
+
+    ctx.fillStyle = bladeGradient;
     ctx.beginPath();
-    ctx.moveTo(-size * 0.4, -size * 0.15);
-    ctx.lineTo(size * 0.6, -size * 0.05);
-    ctx.lineTo(size * 0.6, size * 0.05);
-    ctx.lineTo(-size * 0.4, size * 0.15);
+    ctx.moveTo(-5, -bladeWidth / 2);
+    ctx.lineTo(bladeLength - 15, -bladeWidth / 2);
+    ctx.quadraticCurveTo(bladeLength, -bladeWidth / 4, bladeLength, 0); // Tip curve
+    ctx.quadraticCurveTo(bladeLength, bladeWidth / 4, bladeLength - 10, bladeWidth / 3);
+    ctx.lineTo(-5, bladeWidth / 2);
     ctx.closePath();
     ctx.fill();
 
-    // Blade edge highlight
-    ctx.strokeStyle = '#cfd8dc';
+    // Blade edge shine
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(-size * 0.3, -size * 0.1);
-    ctx.lineTo(size * 0.5, 0);
+    ctx.moveTo(0, -bladeWidth / 2 + 2);
+    ctx.lineTo(bladeLength - 18, -bladeWidth / 2 + 2);
     ctx.stroke();
 
-    // Center pivot
-    ctx.fillStyle = '#546e7a';
+    // Blade edge (sharp part)
+    ctx.strokeStyle = '#78909c';
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.arc(-size * 0.35, 0, size * 0.12, 0, Math.PI * 2);
+    ctx.moveTo(-5, bladeWidth / 2);
+    ctx.lineTo(bladeLength - 10, bladeWidth / 3);
+    ctx.stroke();
+
+    // Handle (blue like reference)
+    const handleGradient = ctx.createLinearGradient(0, -handleWidth / 2, 0, handleWidth / 2);
+    handleGradient.addColorStop(0, '#42a5f5');
+    handleGradient.addColorStop(0.3, '#2196f3');
+    handleGradient.addColorStop(0.7, '#1976d2');
+    handleGradient.addColorStop(1, '#1565c0');
+
+    ctx.fillStyle = handleGradient;
+    ctx.beginPath();
+    ctx.moveTo(-5, -handleWidth / 2);
+    ctx.lineTo(-handleLength, -handleWidth / 2 + 2);
+    ctx.quadraticCurveTo(-handleLength - 5, 0, -handleLength, handleWidth / 2 - 2);
+    ctx.lineTo(-5, handleWidth / 2);
+    ctx.closePath();
     ctx.fill();
+
+    // Handle highlight
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.beginPath();
+    ctx.moveTo(-8, -handleWidth / 2 + 2);
+    ctx.lineTo(-handleLength + 5, -handleWidth / 2 + 4);
+    ctx.lineTo(-handleLength + 5, -handleWidth / 4);
+    ctx.lineTo(-8, -handleWidth / 4);
+    ctx.closePath();
+    ctx.fill();
+
+    // Metal bolster (where blade meets handle)
+    ctx.fillStyle = '#90a4ae';
+    ctx.fillRect(-8, -handleWidth / 2, 6, handleWidth);
+
+    // Bolster shine
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.fillRect(-7, -handleWidth / 2 + 1, 2, handleWidth - 2);
 
     ctx.restore();
   }

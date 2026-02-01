@@ -17,7 +17,43 @@ export interface ObjectDefinition {
 }
 
 export const OBJECTS: ObjectDefinition[] = [
-  // Soft materials (1 swipe) - Levels 1-5
+  // SOFT MATERIALS (1 swipe) - Levels 1-5 (Fruits first like the reference)
+  {
+    id: 'kiwi',
+    name: 'Kiwi',
+    material: 'soft',
+    color: '#8BC34A',
+    accentColor: '#689F38',
+    requiredSwipes: 1,
+    baseCoins: 10,
+    unlockLevel: 1,
+    particleColor: '#AED581',
+    satisfactionMultiplier: 1.0,
+  },
+  {
+    id: 'strawberry',
+    name: 'Strawberry',
+    material: 'soft',
+    color: '#E53935',
+    accentColor: '#C62828',
+    requiredSwipes: 1,
+    baseCoins: 12,
+    unlockLevel: 1,
+    particleColor: '#EF5350',
+    satisfactionMultiplier: 1.1,
+  },
+  {
+    id: 'apple',
+    name: 'Apple',
+    material: 'soft',
+    color: '#E53935',
+    accentColor: '#B71C1C',
+    requiredSwipes: 1,
+    baseCoins: 15,
+    unlockLevel: 2,
+    particleColor: '#FF8A80',
+    satisfactionMultiplier: 1.15,
+  },
   {
     id: 'soap',
     name: 'Soap Bar',
@@ -25,10 +61,10 @@ export const OBJECTS: ObjectDefinition[] = [
     color: '#b8e0d2',
     accentColor: '#95cdbf',
     requiredSwipes: 1,
-    baseCoins: 10,
-    unlockLevel: 1,
+    baseCoins: 18,
+    unlockLevel: 3,
     particleColor: '#d4f0e7',
-    satisfactionMultiplier: 1.0,
+    satisfactionMultiplier: 1.2,
   },
   {
     id: 'kinetic_sand',
@@ -37,10 +73,10 @@ export const OBJECTS: ObjectDefinition[] = [
     color: '#e8c98d',
     accentColor: '#d4b06b',
     requiredSwipes: 1,
-    baseCoins: 15,
-    unlockLevel: 2,
+    baseCoins: 20,
+    unlockLevel: 4,
     particleColor: '#f5e6c3',
-    satisfactionMultiplier: 1.1,
+    satisfactionMultiplier: 1.25,
   },
   {
     id: 'clay',
@@ -49,13 +85,13 @@ export const OBJECTS: ObjectDefinition[] = [
     color: '#d68c45',
     accentColor: '#c47a35',
     requiredSwipes: 1,
-    baseCoins: 20,
-    unlockLevel: 3,
+    baseCoins: 22,
+    unlockLevel: 5,
     particleColor: '#e8a868',
-    satisfactionMultiplier: 1.2,
+    satisfactionMultiplier: 1.3,
   },
 
-  // Medium materials (2-3 swipes) - Levels 6-15
+  // MEDIUM MATERIALS (2-3 swipes) - Levels 6-15
   {
     id: 'rubber',
     name: 'Rubber Block',
@@ -66,7 +102,7 @@ export const OBJECTS: ObjectDefinition[] = [
     baseCoins: 25,
     unlockLevel: 6,
     particleColor: '#666666',
-    satisfactionMultiplier: 1.3,
+    satisfactionMultiplier: 1.35,
   },
   {
     id: 'foam',

@@ -189,20 +189,15 @@ export class Game {
     // Get container size
     const { clientWidth, clientHeight } = container;
 
-    // Set canvas size (using device pixel ratio for sharpness)
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-
-    this.canvas.width = clientWidth * dpr;
-    this.canvas.height = clientHeight * dpr;
+    // Set canvas size to match CSS size (1:1 for simpler coordinate handling)
+    this.canvas.width = clientWidth;
+    this.canvas.height = clientHeight;
 
     this.canvas.style.width = `${clientWidth}px`;
     this.canvas.style.height = `${clientHeight}px`;
 
-    // Scale context for DPR
-    this.ctx.scale(dpr, dpr);
-
-    // Reset scale on next frame
-    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // Reset transform to identity
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
 
   /**

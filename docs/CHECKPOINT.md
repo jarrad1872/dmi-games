@@ -1,54 +1,46 @@
-﻿# DMI Tools Arcade - Session Checkpoint
+# DMI Tools Arcade - Session Checkpoint
 
-> Last Updated: 2026-01-31 (Session 4 - Bob)
+> Last Updated: 2026-01-31 (Session 6 - Cleanup)
 
 ## Current Status
 
 **Phase**: 5 - HEAT RUNNER Implementation
-**Progress**: Core gameplay COMPLETE - ready for testing
-**Next Step**: Test, add power-ups, quality gate
+**Progress**: Core gameplay complete - needs testing and polish
+**Next Step**: Test HEAT RUNNER, add power-ups, quality gate
 
 ## What Was Completed This Session
 
-### HEAT RUNNER Core Build (Bob + Sub-agents)
+### Codebase Cleanup
 
-**12 files created (1,386 lines):**
+**Removed 3 premature game implementations:**
+- `idle-drill-rig` (Phase 6 - was built out of order)
+- `precision-demo` (Phase 7 - was built out of order)
+- `zen-job-sim` (Phase 8 - was built out of order)
 
-| File | Lines | Purpose |
-|------|-------|--------|
-| Game.ts | 133 | Main game class |
-| scenes/GameScene.ts | 213 | Core 3-lane gameplay |
-| scenes/MenuScene.ts | 101 | Start screen |
-| scenes/Scene.ts | 36 | Base scene class |
-| objects/Player.ts | 168 | Construction worker |
-| objects/Obstacle.ts | 113 | Obstacle class |
-| ui/HUD.ts | 113 | Score/distance display |
-| systems/InputHandler.ts | 167 | Touch + keyboard |
-| systems/ProgressionSystem.ts | 116 | High scores |
-| data/obstacles.ts | 78 | 5 obstacle types |
-| data/powerups.ts | 71 | 5 power-up defs |
-| index.ts | 12 | Export entry |
+**Removed 26+ stray files:**
+- 6 BUILD_*.md files (build docs not in /docs)
+- 3 old spec files (CORE-DROP-V2-SPEC.md, GAME-PLAN.md, RESEARCH.md)
+- 1 old specs folder (specs/core-shooter-prd.md)
+- 12 temp/log .txt files
+- 9 stray build scripts (.ps1, .bat)
+- 1 backup file (main.ts.bak)
 
-**Features implemented:**
-- 3-lane system (left: -150, center: 0, right: 150)
-- Auto-running player
-- Swipe left/right for lane change
-- Swipe up for jump, down for slide
-- Keyboard fallback (WASD/Arrows)
-- Obstacle spawning every 2-3 seconds
-- Collision detection with avoid-method logic
-- Speed increases over distance
-- Score/distance/coins HUD
-- Game over screen with high score
-- Menu with animated play button
+**Fixed main.ts:**
+- Removed imports for deleted games
+- Now only supports asmr-cut and heat-runner
 
-**TypeScript: PASSED**
+## Games Currently Implemented
+
+| Game | Status |
+|------|--------|
+| ASMR CUT | Complete (Phase 4) |
+| HEAT RUNNER | Core done, needs polish (Phase 5) |
 
 ## Ready for Next Session
 
-### Remaining Phase 5 Tasks
+### Phase 5 Remaining Tasks
 
-1. [ ] Test gameplay in browser
+1. [ ] Test HEAT RUNNER gameplay in browser
 2. [ ] Add power-up spawning and effects
 3. [ ] Add audio (AudioManager.ts)
 4. [ ] Polish visuals and particles
@@ -60,10 +52,27 @@
 ```bash
 cd C:\Users\jarra\projects\dmi-games
 pnpm dev
-# Open http://localhost:3000 and navigate to Heat Runner
+# Open http://localhost:3000
+# Change ACTIVE_GAME in main.ts to 'heat-runner' to test
 ```
 
-## Commits This Session
+## File Structure (Clean)
 
-- 96f0317: Phase 5 reference gathering
-- 54a4b2d: HEAT RUNNER core gameplay complete
+```
+apps/arcade/src/games/
+  asmr-cut/     # Phase 4 - Complete
+  heat-runner/  # Phase 5 - In Progress
+docs/
+  CHECKPOINT.md
+  TASKS.md
+  PROGRESS_LOG.md
+  DECISIONS.md
+  PRD.md
+reference/
+  asmr_cut/
+  heat_runner/
+  idle_drill_rig/
+  precision_demo/
+  zen_job_sim/
+  rhythm_cut/
+```
