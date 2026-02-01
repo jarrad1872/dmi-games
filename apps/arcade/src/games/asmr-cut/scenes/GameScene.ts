@@ -51,6 +51,11 @@ export class GameScene extends Scene {
   private levelCoins: number = 0;
   private stars: number = 0;
 
+  // Rebar hazard
+  private currentObjectHasRebar: boolean = false;
+  private rebarWarningTimer: number = 0;
+  private rebarHitCount: number = 0;
+
   // Transition
   private transitionTimer: number = 0;
   private transitionDuration: number = 2;
@@ -115,6 +120,12 @@ export class GameScene extends Scene {
       canvasHeight: canvas.height,
       level: progression.getCurrentLevel(),
     });
+
+    // Determine if this object has hidden rebar
+    const def = this.currentObject.definition;
+    this.currentObjectHasRebar = def.hasRebar === true &&
+      def.rebarChance !== undefined &&
+      Math.random() < def.rebarChance;
   }
 
   private updateHUD(): void {
@@ -156,6 +167,11 @@ export class GameScene extends Scene {
     if (result.hit && result.entryPoint && result.exitPoint) {
       const precision = result.precision || 0;
       this.totalPrecision += precision;
+
+      // Check for rebar hit (after first slice on hard materials)
+      if (this.currentObjectHasRebar && this.currentObject.currentHealth < this.currentObject.maxHealth) {
+        this.handleRebarHit();
+      }
 
       // Play slice sound
       audioManager.playSlice();
@@ -201,6 +217,37 @@ export class GameScene extends Scene {
         }
       }
     }
+  }
+
+  private handleRebarHit(): void {
+    this.rebarHitCount++;
+    this.rebarWarningTimer = 2; // Show warning for 2 seconds
+
+    // Emit orange/rust colored sparks
+    if (this.currentObject) {
+      this.particleSystem.burst(this.currentObject.x, this.currentObject.y, {
+        colors: ['#ff6600', '#ff8800', '#ffaa00', '#8b4513'],
+        count: 25,
+        minSpeed: 300,
+        maxSpeed: 500,
+        minSize: 3,
+        maxSize: 8,
+        minLife: 0.3,
+        maxLife: 0.6,
+        type: 'circle',
+      });
+    }
+
+    // Strong haptic feedback for rebar hit
+    if (navigator.vibrate) {
+      navigator.vibrate([100, 50, 100]);
+    }
+
+    // Track rebar hit
+    trackLevelComplete(this.game.getProgression().getCurrentLevel(), 0, {
+      event_type: 'rebar_hit',
+      hit_count: this.rebarHitCount,
+    });
   }
 
   private onObjectDestroyed(cutAngle: number, swipePath: SwipePath): void {
@@ -336,6 +383,11 @@ export class GameScene extends Scene {
     this.scorePopup.update(deltaTime);
     this.starRating.update(deltaTime);
 
+    // Update rebar warning timer
+    if (this.rebarWarningTimer > 0) {
+      this.rebarWarningTimer -= dt;
+    }
+
     // Handle level complete transition
     if (this.state === 'levelComplete') {
       this.transitionTimer += dt;
@@ -407,28 +459,114 @@ export class GameScene extends Scene {
     this.hud.render(ctx, canvas.width);
     this.scorePopup.render(ctx);
 
+    // Rebar warning
+    if (this.rebarWarningTimer > 0) {
+      this.renderRebarWarning(ctx, canvas.width, canvas.height);
+    }
+
     // Level complete overlay
     if (this.state === 'levelComplete' || this.state === 'transitioning') {
       this.renderLevelComplete(ctx, canvas.width, canvas.height);
     }
   }
 
+  private renderRebarWarning(ctx: CanvasRenderingContext2D, width: number, height: number): void {
+    const alpha = Math.min(1, this.rebarWarningTimer);
+
+    // Red flash overlay
+    ctx.fillStyle = `rgba(166, 28, 0, ${alpha * 0.15})`;
+    ctx.fillRect(0, 0, width, height);
+
+    // Warning text
+    ctx.save();
+    ctx.globalAlpha = alpha;
+
+    // Warning box
+    const boxWidth = 280;
+    const boxHeight = 60;
+    const boxX = (width - boxWidth) / 2;
+    const boxY = height * 0.15;
+
+    ctx.fillStyle = 'rgba(166, 28, 0, 0.9)';
+    ctx.beginPath();
+    ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 8);
+    ctx.fill();
+
+    // Warning text
+    ctx.fillStyle = '#ffffff';
+    ctx.font = "bold 18px 'Roboto', sans-serif";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('⚠️ REBAR HIT!', width / 2, boxY + 22);
+
+    ctx.font = "14px 'Roboto', sans-serif";
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.fillText('Watch out for hidden rebar!', width / 2, boxY + 44);
+
+    ctx.restore();
+  }
+
   private renderBackground(ctx: CanvasRenderingContext2D, width: number, height: number): void {
-    // Light pastel gradient (matching ASMR Slicing reference)
+    // Industrial workshop background - dark gray gradient
     const gradient = ctx.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, '#e0f7fa'); // Light cyan/mint
-    gradient.addColorStop(0.5, '#b2ebf2'); // Mid cyan
-    gradient.addColorStop(1, '#e1f5fe'); // Light blue
+    gradient.addColorStop(0, '#2d2d2d'); // Dark gray top
+    gradient.addColorStop(0.5, '#3d3d3d'); // Mid gray
+    gradient.addColorStop(1, '#4a4a4a'); // Slightly lighter bottom
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
 
-    // Soft vignette (lighter than before)
+    // Subtle concrete texture (random dots)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+    for (let i = 0; i < 100; i++) {
+      const x = Math.random() * width;
+      const y = Math.random() * height;
+      ctx.beginPath();
+      ctx.arc(x, y, 1 + Math.random() * 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Faint grid lines suggesting workshop floor
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+    ctx.lineWidth = 1;
+    const gridSize = 50;
+    for (let x = 0; x < width; x += gridSize) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, height);
+      ctx.stroke();
+    }
+    for (let y = 0; y < height; y += gridSize) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
+    }
+
+    // Safety yellow stripe at bottom
+    const stripeHeight = 12;
+    const stripeY = height - stripeHeight - 60;
+    ctx.fillStyle = '#ffc107';
+    ctx.fillRect(0, stripeY, width, stripeHeight);
+    // Black hazard stripes
+    ctx.fillStyle = '#1a1a1a';
+    const stripeWidth = 20;
+    for (let x = -stripeWidth; x < width + stripeWidth; x += stripeWidth * 2) {
+      ctx.beginPath();
+      ctx.moveTo(x, stripeY);
+      ctx.lineTo(x + stripeWidth, stripeY);
+      ctx.lineTo(x + stripeWidth * 2, stripeY + stripeHeight);
+      ctx.lineTo(x + stripeWidth, stripeY + stripeHeight);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Soft vignette for depth
     const vignette = ctx.createRadialGradient(
       width / 2, height / 2, 0,
       width / 2, height / 2, Math.max(width, height) * 0.8
     );
     vignette.addColorStop(0, 'transparent');
-    vignette.addColorStop(1, 'rgba(0, 0, 0, 0.1)');
+    vignette.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
     ctx.fillStyle = vignette;
     ctx.fillRect(0, 0, width, height);
   }
@@ -454,17 +592,8 @@ export class GameScene extends Scene {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Small circle indicator at the end point
-    ctx.fillStyle = '#64b5f6';
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(endPoint.x, endPoint.y, 8, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-
-    // Draw knife at the current swipe position (end of trail)
-    this.drawKnife(ctx, endPoint.x, endPoint.y, startPoint, endPoint);
+    // Draw DMI diamond blade at the current swipe position
+    this.drawDiamondBlade(ctx, endPoint.x, endPoint.y);
 
     // Trail glow (subtle)
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
@@ -480,99 +609,100 @@ export class GameScene extends Scene {
     ctx.restore();
   }
 
-  private drawKnife(
+  private drawDiamondBlade(
     ctx: CanvasRenderingContext2D,
     x: number,
-    y: number,
-    start: { x: number; y: number },
-    end: { x: number; y: number }
+    y: number
   ): void {
     ctx.save();
     ctx.translate(x, y);
 
-    // Calculate angle from start to end, knife points in travel direction
-    const angle = Math.atan2(end.y - start.y, end.x - start.x);
-    ctx.rotate(angle + Math.PI / 4); // Tilt knife slightly
+    // Blade rotation based on time for spinning effect
+    const spinAngle = (performance.now() / 50) % (Math.PI * 2);
+    ctx.rotate(spinAngle);
 
-    // Knife dimensions
-    const bladeLength = 60;
-    const bladeWidth = 12;
-    const handleLength = 45;
-    const handleWidth = 16;
+    const outerRadius = 35;
+    const innerRadius = 12;
+    const segments = 16;
 
     // Shadow
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
     ctx.beginPath();
-    ctx.ellipse(20, 15, 35, 8, 0.3, 0, Math.PI * 2);
+    ctx.arc(4, 4, outerRadius, 0, Math.PI * 2);
     ctx.fill();
 
-    // Blade (silver with gradient)
-    const bladeGradient = ctx.createLinearGradient(0, -bladeWidth / 2, 0, bladeWidth / 2);
-    bladeGradient.addColorStop(0, '#f5f5f5');
-    bladeGradient.addColorStop(0.3, '#e0e0e0');
+    // Outer blade ring (silver/steel)
+    const bladeGradient = ctx.createRadialGradient(0, 0, innerRadius, 0, 0, outerRadius);
+    bladeGradient.addColorStop(0, '#e0e0e0');
     bladeGradient.addColorStop(0.5, '#bdbdbd');
-    bladeGradient.addColorStop(0.7, '#e0e0e0');
-    bladeGradient.addColorStop(1, '#9e9e9e');
+    bladeGradient.addColorStop(0.8, '#9e9e9e');
+    bladeGradient.addColorStop(1, '#757575');
 
     ctx.fillStyle = bladeGradient;
     ctx.beginPath();
-    ctx.moveTo(-5, -bladeWidth / 2);
-    ctx.lineTo(bladeLength - 15, -bladeWidth / 2);
-    ctx.quadraticCurveTo(bladeLength, -bladeWidth / 4, bladeLength, 0); // Tip curve
-    ctx.quadraticCurveTo(bladeLength, bladeWidth / 4, bladeLength - 10, bladeWidth / 3);
-    ctx.lineTo(-5, bladeWidth / 2);
-    ctx.closePath();
+    ctx.arc(0, 0, outerRadius, 0, Math.PI * 2);
+    ctx.arc(0, 0, innerRadius, 0, Math.PI * 2, true);
     ctx.fill();
 
-    // Blade edge shine
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+    // Diamond segments (DMI red)
+    ctx.fillStyle = '#a61c00';
+    for (let i = 0; i < segments; i++) {
+      const startAngle = (i / segments) * Math.PI * 2;
+      const endAngle = ((i + 0.4) / segments) * Math.PI * 2;
+
+      ctx.beginPath();
+      ctx.arc(0, 0, outerRadius - 2, startAngle, endAngle);
+      ctx.arc(0, 0, outerRadius - 8, endAngle, startAngle, true);
+      ctx.fill();
+    }
+
+    // Segment notches (cutting edge detail)
+    ctx.strokeStyle = '#666666';
     ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(0, -bladeWidth / 2 + 2);
-    ctx.lineTo(bladeLength - 18, -bladeWidth / 2 + 2);
-    ctx.stroke();
+    for (let i = 0; i < segments; i++) {
+      const angle = (i / segments) * Math.PI * 2;
+      const x1 = Math.cos(angle) * (outerRadius - 8);
+      const y1 = Math.sin(angle) * (outerRadius - 8);
+      const x2 = Math.cos(angle) * outerRadius;
+      const y2 = Math.sin(angle) * outerRadius;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
 
-    // Blade edge (sharp part)
-    ctx.strokeStyle = '#78909c';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(-5, bladeWidth / 2);
-    ctx.lineTo(bladeLength - 10, bladeWidth / 3);
-    ctx.stroke();
+    // Center hub (DMI branded)
+    const hubGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, innerRadius);
+    hubGradient.addColorStop(0, '#333333');
+    hubGradient.addColorStop(0.7, '#1a1a1a');
+    hubGradient.addColorStop(1, '#000000');
 
-    // Handle (blue like reference)
-    const handleGradient = ctx.createLinearGradient(0, -handleWidth / 2, 0, handleWidth / 2);
-    handleGradient.addColorStop(0, '#42a5f5');
-    handleGradient.addColorStop(0.3, '#2196f3');
-    handleGradient.addColorStop(0.7, '#1976d2');
-    handleGradient.addColorStop(1, '#1565c0');
-
-    ctx.fillStyle = handleGradient;
+    ctx.fillStyle = hubGradient;
     ctx.beginPath();
-    ctx.moveTo(-5, -handleWidth / 2);
-    ctx.lineTo(-handleLength, -handleWidth / 2 + 2);
-    ctx.quadraticCurveTo(-handleLength - 5, 0, -handleLength, handleWidth / 2 - 2);
-    ctx.lineTo(-5, handleWidth / 2);
-    ctx.closePath();
+    ctx.arc(0, 0, innerRadius, 0, Math.PI * 2);
     ctx.fill();
 
-    // Handle highlight
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    // DMI text on hub
+    ctx.fillStyle = '#a61c00';
+    ctx.font = "bold 8px 'Roboto', sans-serif";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.save();
+    ctx.rotate(-spinAngle); // Counter-rotate so text stays readable
+    ctx.fillText('DMI', 0, 0);
+    ctx.restore();
+
+    // Center arbor hole
+    ctx.fillStyle = '#000000';
     ctx.beginPath();
-    ctx.moveTo(-8, -handleWidth / 2 + 2);
-    ctx.lineTo(-handleLength + 5, -handleWidth / 2 + 4);
-    ctx.lineTo(-handleLength + 5, -handleWidth / 4);
-    ctx.lineTo(-8, -handleWidth / 4);
-    ctx.closePath();
+    ctx.arc(0, 0, 4, 0, Math.PI * 2);
     ctx.fill();
 
-    // Metal bolster (where blade meets handle)
-    ctx.fillStyle = '#90a4ae';
-    ctx.fillRect(-8, -handleWidth / 2, 6, handleWidth);
-
-    // Bolster shine
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-    ctx.fillRect(-7, -handleWidth / 2 + 1, 2, handleWidth - 2);
+    // Highlight reflection
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.beginPath();
+    ctx.ellipse(-outerRadius * 0.4, -outerRadius * 0.4, outerRadius * 0.3, outerRadius * 0.15, -0.5, 0, Math.PI * 2);
+    ctx.fill();
 
     ctx.restore();
   }

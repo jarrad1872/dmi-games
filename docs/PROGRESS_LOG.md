@@ -195,6 +195,93 @@
 
 ---
 
+### 2026-01-31 - Session 7: Product Catalog System Implementation
+
+**Phase**: Infrastructure - Product Catalog
+
+**Completed**:
+- Created Supabase migration for products table (supabase/migrations/001_products_table.sql)
+- Created seed script with 19 DMI products across 4 categories (supabase/seed.sql):
+  - 7 blades (Standard through Master)
+  - 4 core bits (Laser Welded, Large Diameter, Arix, Heavy Duty)
+  - 5 accessories (Extension, Slurry Ring, Sharpening Block, Reducer, Anchor Tool)
+  - 3 equipment (Wolverine Handsaw, LED Balloon Light, Water Tank)
+- Created SDK types module (packages/game-sdk/src/types.ts):
+  - CatalogProduct, GameProductConfig, GameProduct interfaces
+  - LoadoutConfig, LoadoutRow for database mapping
+  - ProductCategory type union
+- Enhanced SDK with product catalog functions:
+  - fetchProductCatalog() - fetches full catalog
+  - getCatalog(), getCatalogProduct(), getCatalogProductsByCategory()
+  - getGameProducts(), getProduct(), getProductsByCategory(), getProductsByTier()
+  - getUnlockedProducts(), getProductForLevel()
+  - Updated fetchLoadout() to merge catalog with game-specific stats
+  - Added showToolDropForLevel() convenience function
+  - Bumped SDK version to 0.2.0
+- Updated ASMR Cut integration:
+  - Added productId field to BladeDefinition interface
+  - Mapped all 8 blades to catalog product IDs
+  - Updated Game.ts fallback loadout with proper GameProduct[] array
+  - Fallback includes 6 products with game-specific stats
+
+**Architecture**:
+Two-tier product model:
+1. Products table: Master catalog (name, SKU, URL, image, category, price)
+2. Loadouts table: Per-game config with GameProductConfig (tier, game_cost, stats, game_effect)
+
+Games receive merged GameProduct objects with both catalog data and game-specific stats.
+
+**Build Verified**:
+- game-sdk: 13.02 KB (ESM), types: 7.24 KB
+- arcade: 244.48 KB production build
+- TypeScript compiles without errors
+
+**Blockers**: None (factory app doesn't have pages yet - expected)
+
+**Next Steps**:
+1. Create Supabase project and run migrations
+2. Seed products and loadouts
+3. Test end-to-end: Supabase → SDK → Game
+4. Build Factory admin UI for product management
+
+---
+
+### 2026-01-31 - Session 8: Supabase Setup Complete
+
+**Phase**: Infrastructure - Supabase Database
+
+**Completed**:
+- Created Supabase project "dmi-games" with all required tables
+- Seeded products table with 19 DMI products via SQL Editor
+- Created loadouts table and seeded asmr_cut game loadout via REST API
+- Created events table for analytics tracking
+- Configured .env with Supabase credentials
+- Verified game loads and connects to Supabase successfully
+
+**Database State**:
+| Table | Status | Records |
+|-------|--------|---------|
+| products | ✅ Complete | 19 products |
+| loadouts | ✅ Complete | 1 loadout (asmr_cut) |
+| events | ✅ Created | 0 (ready for analytics) |
+
+**asmr_cut Loadout Products**:
+- blade-standard (tier 1, free)
+- blade-segmented (tier 2, 500 coins)
+- blade-turbo (tier 3, 2000 coins)
+- blade-pro-series (tier 4, 5000 coins)
+- blade-master (tier 5, 10000 coins)
+- bit-arix (tier 3, bonus product)
+
+**Blockers**: None
+
+**Next Steps**:
+1. Build Factory admin UI for managing loadouts
+2. Continue HEAT RUNNER polish
+3. Add more game loadouts as games are completed
+
+---
+
 ### 2026-01-31 - Session 3: HEAT RUNNER Reference Gathering (Bob)
 
 **Phase**: 5 - HEAT RUNNER

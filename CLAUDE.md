@@ -84,6 +84,44 @@ Every game must:
 4. Support Tool Drop promotional system
 5. Build to < 2MB single HTML file
 
+## MANDATORY: DMI Integration Checklist
+
+**CRITICAL**: Every game MUST integrate DMI Tools branding. This is a marketing platform, not a generic game site. Before marking any game complete, verify ALL items:
+
+### Branding (Required)
+- [ ] Title screen shows "by DMI TOOLS" or DMI branding
+- [ ] DMI red (#a61c00) used as primary accent color
+- [ ] dmitools.com link visible on menu/title screen
+- [ ] Contractor-forward tone (edgy, professional, trades-focused)
+- [ ] NO generic themes (no random fruits, animals, etc. unless spec explicitly requires)
+
+### Tool Drop (Required)
+- [ ] showToolDrop() called at milestones (level 5, then every 10 levels)
+- [ ] Fallback products defined for offline mode
+- [ ] Links point to dmitools.com product pages
+- [ ] "Love that blade? Get the real thing." or similar CTA
+
+### In-Game Products (Required)
+- [ ] Upgrades/tools named after real DMI products
+- [ ] DMI product categories featured (blades, core bits, etc.)
+- [ ] Shop/upgrade items marked as "DMI OFFICIAL" where applicable
+
+### Game Theme Connection (Required)
+Each game must connect to DMI's concrete cutting business:
+- ASMR CUT: Diamond blades cutting through construction materials
+- HEAT RUNNER: Construction worker with safety gear, job site obstacles
+- IDLE DRILL RIG: Core drilling equipment and drill bits
+- PRECISION DEMO: Demolition with DMI cutting tools
+- ZEN JOB SIM: Job site cleaning with DMI equipment
+- RHYTHM CUT: Slicing beats with DMI blades
+
+### What NOT To Do
+- NO generic ASMR content (fruits, random objects)
+- NO unbranded tools or upgrades
+- NO missing Tool Drop integration
+- NO games that could belong to any random company
+- NO skipping the clone_spec.md DMI Integration section
+
 ## Session Management
 
 Before starting work:
@@ -99,14 +137,14 @@ After completing work:
 
 ## Game Roster
 
-| Game | Reference | Status |
-|------|-----------|--------|
-| ASMR CUT | ASMR Slicing | Reference gathering |
-| HEAT RUNNER | Subway Surfers | Pending |
-| IDLE DRILL RIG | Idle Miner Tycoon | Pending |
-| PRECISION DEMO | Teardown | Pending |
-| ZEN JOB SIM | PowerWash Simulator | Pending |
-| RHYTHM CUT | Beat Saber | Pending |
+| Game | Reference | Status | DMI Integration |
+|------|-----------|--------|-----------------|
+| ASMR CUT | ASMR Slicing | **Complete** | Diamond blades, concrete/brick, rebar hazard |
+| HEAT RUNNER | Subway Surfers | Core done | Safety gear, job site theme |
+| IDLE DRILL RIG | Idle Miner Tycoon | Pending | Core bits, drill upgrades |
+| PRECISION DEMO | Teardown | Pending | Demolition tools |
+| ZEN JOB SIM | PowerWash Simulator | Pending | Job site cleaning |
+| RHYTHM CUT | Beat Saber | Pending | DMI blade themes |
 
 ## Supabase Schema
 
@@ -156,6 +194,6 @@ Push to `main` auto-deploys to games.dmitools.com via Vercel.
 
 ## Phase Tracking
 
-Current: **Phase 0 - Foundation**
+Current: **Phase 5 - HEAT RUNNER** (ASMR CUT complete)
 
 See `docs/TASKS.md` for detailed phase breakdown.

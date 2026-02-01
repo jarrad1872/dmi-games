@@ -15,6 +15,8 @@ import {
   initPromoEngine,
   trackGameStart,
   LoadoutConfig,
+  GameProduct,
+  CatalogProduct,
 } from '@dmi-games/game-sdk';
 
 export type SceneName = 'menu' | 'game' | 'shop';
@@ -67,19 +69,96 @@ export class Game {
     // Set canvas size
     this.resize();
 
-    // Initialize SDK
+    // Initialize SDK with fallback products (matching catalog IDs)
+    const fallbackProducts: GameProduct[] = [
+      {
+        id: 'blade-standard',
+        name: 'Standard Cured Concrete Blade',
+        shopify_url: 'https://dmitools.com/collections/diamond-blades/products/standard-cured-concrete-blade',
+        category: 'blades',
+        tier: 1,
+        game_cost: 0,
+        stats: { cutting_speed: 1.0, precision: 1.0, coin_bonus: 1.0 },
+        game_effect: 'Basic blade. Gets the job done.',
+      },
+      {
+        id: 'blade-segmented',
+        name: 'DMI Segmented Diamond Blade',
+        shopify_url: 'https://dmitools.com/collections/diamond-blades/products/segmented-diamond-blade',
+        category: 'blades',
+        tier: 2,
+        game_cost: 500,
+        stats: { cutting_speed: 1.2, precision: 1.15, coin_bonus: 1.1 },
+        game_effect: '20% faster cuts!',
+      },
+      {
+        id: 'blade-turbo',
+        name: 'DMI Turbo Diamond Blade',
+        shopify_url: 'https://dmitools.com/collections/diamond-blades/products/turbo-diamond-blade',
+        category: 'blades',
+        tier: 3,
+        game_cost: 2000,
+        stats: { cutting_speed: 1.5, precision: 1.2, coin_bonus: 1.2 },
+        game_effect: '50% faster cuts! Slices through rebar.',
+      },
+      {
+        id: 'blade-pro-series',
+        name: 'DMI Pro Series Diamond Blade',
+        shopify_url: 'https://dmitools.com/collections/diamond-blades/products/pro-series-diamond-blade',
+        category: 'blades',
+        tier: 4,
+        game_cost: 5000,
+        stats: { cutting_speed: 1.6, precision: 1.4, coin_bonus: 1.5 },
+        game_effect: 'Contractor-grade. +50% coins!',
+      },
+      {
+        id: 'blade-master',
+        name: 'DMI Master Diamond Blade',
+        shopify_url: 'https://dmitools.com/collections/diamond-blades/products/master-diamond-blade',
+        category: 'blades',
+        tier: 5,
+        game_cost: 10000,
+        stats: { cutting_speed: 2.0, precision: 1.6, coin_bonus: 2.0 },
+        game_effect: 'Legendary blade. Cuts through anything.',
+      },
+      {
+        id: 'bit-arix',
+        name: 'Arix Technology Core Bit',
+        shopify_url: 'https://dmitools.com/collections/core-bits/products/arix-technology-core-bit',
+        category: 'core-bits',
+        tier: 3,
+        game_effect: 'Premium core drilling for pros.',
+      },
+    ];
+
+    const fallbackLoadout: LoadoutConfig = {
+      game_id: 'asmr_cut',
+      products: fallbackProducts,
+      promo_banner: {
+        enabled: true,
+        title: 'Love that blade?',
+        subtitle: 'Get the real thing at DMI Tools',
+        cta_text: 'Shop DMI',
+        cta_url: 'https://dmitools.com/collections/diamond-blades',
+      },
+      feature_flags: { tool_drop_enabled: true },
+    };
+
     try {
       initSDK({
         supabaseUrl: import.meta.env.VITE_SUPABASE_URL || '',
         supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
         gameId: 'asmr_cut',
+        fallbackLoadout,
       });
 
-      // Fetch loadout
+      // Fetch loadout (will use fallback if offline)
       this.loadout = await fetchLoadout('asmr_cut');
       initPromoEngine(this.loadout);
     } catch (err) {
-      console.warn('SDK initialization failed, continuing offline:', err);
+      console.warn('SDK initialization failed, using fallback:', err);
+      this.loadout = fallbackLoadout;
+      initPromoEngine(this.loadout);
     }
 
     // Create scenes

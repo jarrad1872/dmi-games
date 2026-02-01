@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 var supabase = null;
 var currentGameId = null;
 var currentConfig = null;
+var productCatalog = [];
 var sessionId = null;
 var initialized = false;
 function initSDK(config) {
@@ -12,6 +13,9 @@ function initSDK(config) {
   }
   supabase = createClient(config.supabaseUrl, config.supabaseAnonKey);
   currentGameId = config.gameId;
+  if (config.fallbackProducts) {
+    productCatalog = config.fallbackProducts;
+  }
   if (config.fallbackLoadout) {
     currentConfig = config.fallbackLoadout;
   }
@@ -20,6 +24,9 @@ function initSDK(config) {
 }
 function isInitialized() {
   return initialized;
+}
+function getGameId() {
+  return currentGameId;
 }
 function getSessionId() {
   if (!sessionId) {
@@ -41,6 +48,69 @@ function resetSession() {
     localStorage.removeItem("dmi_session_id");
   }
 }
+async function fetchProductCatalog() {
+  if (!supabase) {
+    console.warn("[DMI SDK] Supabase not initialized, returning cached catalog");
+    return productCatalog;
+  }
+  try {
+    const { data, error } = await supabase.from("products").select("*").eq("active", true).order("category", { ascending: true }).order("price_cents", { ascending: true });
+    if (error) {
+      console.warn("[DMI SDK] Catalog fetch error:", error.message);
+      return productCatalog;
+    }
+    productCatalog = data;
+    console.log("[DMI SDK] Fetched", productCatalog.length, "products");
+    return productCatalog;
+  } catch (err) {
+    console.warn("[DMI SDK] Network error fetching catalog:", err);
+    return productCatalog;
+  }
+}
+function getCatalog() {
+  return productCatalog;
+}
+function getCatalogProduct(productId) {
+  return productCatalog.find((p) => p.id === productId) || null;
+}
+function getCatalogProductsByCategory(category) {
+  return productCatalog.filter((p) => p.category === category);
+}
+function getGameProducts() {
+  return currentConfig?.products || [];
+}
+function getProduct(productId) {
+  return currentConfig?.products.find((p) => p.id === productId) || null;
+}
+function getProductsByCategory(category) {
+  return (currentConfig?.products || []).filter((p) => p.category === category);
+}
+function getProductsByTier(tier) {
+  return (currentConfig?.products || []).filter((p) => p.tier === tier);
+}
+function getUnlockedProducts(level) {
+  return (currentConfig?.products || []).filter(
+    (p) => !p.unlock_level || p.unlock_level <= level
+  );
+}
+function mergeProductConfigs(catalog, configs) {
+  return configs.map((config) => {
+    const catalogProduct = catalog.find((p) => p.id === config.product_id);
+    if (!catalogProduct) {
+      console.warn("[DMI SDK] Product not found in catalog:", config.product_id);
+      return null;
+    }
+    const gameProduct = {
+      ...catalogProduct,
+      tier: config.tier,
+      game_cost: config.game_cost,
+      stats: config.stats,
+      game_effect: config.game_effect,
+      unlock_level: config.unlock_level
+    };
+    return gameProduct;
+  }).filter((p) => p !== null);
+}
 async function fetchLoadout(gameId) {
   const targetGameId = gameId || currentGameId;
   if (!targetGameId) {
@@ -56,18 +126,28 @@ async function fetchLoadout(gameId) {
     return fallback;
   }
   try {
-    const { data, error } = await supabase.from("loadouts").select("*").eq("game_id", targetGameId).single();
-    if (error) {
-      console.warn("[DMI SDK] Loadout fetch error:", error.message);
+    const [loadoutResult, catalogResult] = await Promise.all([
+      supabase.from("loadouts").select("*").eq("game_id", targetGameId).single(),
+      supabase.from("products").select("*").eq("active", true)
+    ]);
+    if (loadoutResult.error) {
+      console.warn("[DMI SDK] Loadout fetch error:", loadoutResult.error.message);
       return fallback;
     }
+    if (!catalogResult.error && catalogResult.data) {
+      productCatalog = catalogResult.data;
+    }
+    const row = loadoutResult.data;
+    const productConfigs = Array.isArray(row.products) ? row.products : [];
+    const mergedProducts = mergeProductConfigs(productCatalog, productConfigs);
     const loadout = {
-      game_id: data.game_id,
-      products: Array.isArray(data.products) ? data.products : [],
-      promo_banner: data.promo_banner || void 0,
-      feature_flags: data.feature_flags || {}
+      game_id: row.game_id,
+      products: mergedProducts,
+      promo_banner: row.promo_banner || void 0,
+      feature_flags: row.feature_flags || {}
     };
     currentConfig = loadout;
+    console.log("[DMI SDK] Loaded", mergedProducts.length, "game products");
     return loadout;
   } catch (err) {
     console.warn("[DMI SDK] Network error, using fallback:", err);
@@ -91,6 +171,16 @@ function getRandomProduct() {
   }
   const index = Math.floor(Math.random() * currentConfig.products.length);
   return currentConfig.products[index];
+}
+function getProductForLevel(level) {
+  const products = currentConfig?.products || [];
+  const eligible = products.filter(
+    (p) => !p.unlock_level || p.unlock_level <= level
+  );
+  if (eligible.length === 0) return null;
+  const sorted = [...eligible].sort((a, b) => (b.tier || 0) - (a.tier || 0));
+  const topProducts = sorted.slice(0, 3);
+  return topProducts[Math.floor(Math.random() * topProducts.length)];
 }
 var TOOL_DROP_STYLES = `
   @keyframes dmi-slide-up {
@@ -144,6 +234,11 @@ var TOOL_DROP_STYLES = `
   .dmi-tool-drop-subtitle {
     font-size: 12px;
     opacity: 0.9;
+    margin-bottom: 8px;
+  }
+  .dmi-tool-drop-price {
+    font-size: 11px;
+    opacity: 0.8;
     margin-bottom: 8px;
   }
   .dmi-tool-drop-cta {
@@ -233,12 +328,15 @@ var ToolDropUI = class {
     this.container.id = "dmi-tool-drop";
     this.container.className = "dmi-entering";
     const imageHtml = this.product.image_url ? `<img src="${this.product.image_url}" alt="${this.product.name}" class="dmi-tool-drop-image">` : "";
+    const priceHtml = "price_cents" in this.product && this.product.price_cents ? `<div class="dmi-tool-drop-price">$${(this.product.price_cents / 100).toFixed(2)}</div>` : "";
+    const subtitle = "game_effect" in this.product && this.product.game_effect ? this.product.game_effect : "Available at DMI Tools";
     this.container.innerHTML = `
       <div class="dmi-tool-drop-card">
         ${imageHtml}
         <div class="dmi-tool-drop-content">
           <div class="dmi-tool-drop-title">${this.product.name}</div>
-          <div class="dmi-tool-drop-subtitle">Available at DMI Tools</div>
+          <div class="dmi-tool-drop-subtitle">${subtitle}</div>
+          ${priceHtml}
           <a href="${this.product.shopify_url}" target="_blank" class="dmi-tool-drop-cta"
              onclick="window.dmiTrackClick && window.dmiTrackClick('${this.product.id}')">
             Shop Now
@@ -273,6 +371,12 @@ function showToolDrop(product, autoHideMs) {
 function hideToolDrop() {
   toolDropInstance?.hide();
 }
+function showToolDropForLevel(level, autoHideMs) {
+  const product = getProductForLevel(level);
+  if (product) {
+    showToolDrop(product, autoHideMs);
+  }
+}
 async function track(eventName, properties) {
   const gameId = currentGameId || "unknown";
   const sid = getSessionId();
@@ -300,7 +404,7 @@ function trackLevelComplete(level, score, extras) {
 function trackGameOver(score, level, extras) {
   track("game_over", { score, level, ...extras });
 }
-var VERSION = "0.1.0";
+var VERSION = "0.2.0";
 if (typeof window !== "undefined") {
   window.dmiTrackClick = (productId) => {
     track("tool_drop_clicked", { product_id: productId });
@@ -310,9 +414,20 @@ export {
   ToolDropUI,
   VERSION,
   fetchLoadout,
+  fetchProductCatalog,
+  getCatalog,
+  getCatalogProduct,
+  getCatalogProductsByCategory,
+  getGameId,
+  getGameProducts,
+  getProduct,
+  getProductForLevel,
+  getProductsByCategory,
+  getProductsByTier,
   getPromoConfig,
   getRandomProduct,
   getSessionId,
+  getUnlockedProducts,
   hideToolDrop,
   initPromoEngine,
   initSDK,
@@ -320,6 +435,7 @@ export {
   isToolDropEnabled,
   resetSession,
   showToolDrop,
+  showToolDropForLevel,
   track,
   trackGameOver,
   trackGameStart,

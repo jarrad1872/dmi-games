@@ -82,53 +82,54 @@ export class MenuScene extends Scene {
     const canvas = this.game.getCanvas();
     const { width, height } = canvas;
 
-    // Background gradient
+    // Background gradient (DMI dark theme)
     const gradient = ctx.createLinearGradient(0, 0, width, height);
-    gradient.addColorStop(0, '#1a1a2e');
-    gradient.addColorStop(0.5, '#16213e');
-    gradient.addColorStop(1, '#0f3460');
+    gradient.addColorStop(0, '#1a1a1a');
+    gradient.addColorStop(0.5, '#0d0d0d');
+    gradient.addColorStop(1, '#000000');
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
 
-    // Animated background lines
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 10; i++) {
-      const y = ((i * 100 + this.bgGradientOffset) % (height + 200)) - 100;
+    // DMI red accent lines
+    ctx.strokeStyle = 'rgba(166, 28, 0, 0.15)';
+    ctx.lineWidth = 3;
+    for (let i = 0; i < 8; i++) {
+      const y = ((i * 120 + this.bgGradientOffset) % (height + 200)) - 100;
       ctx.beginPath();
       ctx.moveTo(0, y);
-      ctx.lineTo(width, y + 50);
+      ctx.lineTo(width, y + 60);
       ctx.stroke();
     }
 
     // Title
-    const titleY = height * 0.25 + this.titleY + Math.sin(this.titleBounce) * 5;
+    const titleY = height * 0.22 + this.titleY + Math.sin(this.titleBounce) * 3;
 
     ctx.save();
     ctx.translate(width / 2, titleY);
 
     // Title shadow
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-    ctx.font = "bold 64px 'Roboto Slab', serif";
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.font = "bold 52px 'Roboto Slab', serif";
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('ASMR CUT', 4, 4);
+    ctx.fillText('BLADE TEST', 4, 4);
 
-    // Title gradient
-    const titleGradient = ctx.createLinearGradient(-150, -30, 150, 30);
-    titleGradient.addColorStop(0, '#ff6b6b');
-    titleGradient.addColorStop(0.5, '#ffd93d');
-    titleGradient.addColorStop(1, '#ff6b6b');
-    ctx.fillStyle = titleGradient;
-    ctx.fillText('ASMR CUT', 0, 0);
+    // Title in DMI red
+    ctx.fillStyle = '#a61c00';
+    ctx.fillText('BLADE TEST', 0, 0);
 
     ctx.restore();
 
-    // Subtitle
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-    ctx.font = "18px 'Roboto', sans-serif";
+    // Subtitle - DMI branding
+    ctx.fillStyle = '#ffffff';
+    ctx.font = "bold 16px 'Roboto', sans-serif";
     ctx.textAlign = 'center';
-    ctx.fillText('DMI Games', width / 2, titleY + 50);
+    ctx.fillText('by DMI TOOLS', width / 2, titleY + 45);
+
+    // Tagline
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.font = "14px 'Roboto', sans-serif";
+    ctx.fillText('Test your cutting skills. Upgrade your blade.', width / 2, titleY + 70);
 
     // Stats display
     const progression = this.game.getProgression();
@@ -146,7 +147,12 @@ export class MenuScene extends Scene {
     // Instructions
     ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
     ctx.font = "14px 'Roboto', sans-serif";
-    ctx.fillText('Swipe to slice!', width / 2, height - 50);
+    ctx.fillText('Swipe to cut • Avoid the rebar', width / 2, height - 60);
+
+    // DMI website
+    ctx.fillStyle = '#a61c00';
+    ctx.font = "bold 12px 'Roboto', sans-serif";
+    ctx.fillText('dmitools.com', width / 2, height - 35);
   }
 
   private renderButton(ctx: CanvasRenderingContext2D, button: Button): void {

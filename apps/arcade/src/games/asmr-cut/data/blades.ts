@@ -1,6 +1,9 @@
 /**
  * Blade Upgrade Definitions
  * DMI-branded cutting tools with various bonuses
+ *
+ * Blades link to the DMI product catalog via product_id.
+ * When Supabase is connected, stats can be dynamically loaded from loadouts.
  */
 
 export interface BladeDefinition {
@@ -15,6 +18,7 @@ export interface BladeDefinition {
   glowColor: string;
   unlockLevel: number;
   dmiProduct: boolean;     // Is this a DMI product?
+  productId?: string;      // Links to products.id in Supabase catalog
 }
 
 export const BLADES: BladeDefinition[] = [
@@ -30,6 +34,7 @@ export const BLADES: BladeDefinition[] = [
     glowColor: '#666666',
     unlockLevel: 1,
     dmiProduct: false,
+    productId: 'blade-standard',
   },
   {
     id: 'utility',
@@ -56,6 +61,7 @@ export const BLADES: BladeDefinition[] = [
     glowColor: '#ff3311',
     unlockLevel: 5,
     dmiProduct: true,
+    productId: 'blade-segmented',
   },
   {
     id: 'ceramic',
@@ -69,6 +75,7 @@ export const BLADES: BladeDefinition[] = [
     glowColor: '#aaddff',
     unlockLevel: 10,
     dmiProduct: false,
+    productId: 'blade-continuous',
   },
   {
     id: 'dmi_turbo',
@@ -82,6 +89,7 @@ export const BLADES: BladeDefinition[] = [
     glowColor: '#ff5533',
     unlockLevel: 15,
     dmiProduct: true,
+    productId: 'blade-turbo',
   },
   {
     id: 'diamond',
@@ -95,6 +103,7 @@ export const BLADES: BladeDefinition[] = [
     glowColor: '#00ffff',
     unlockLevel: 20,
     dmiProduct: false,
+    productId: 'blade-high-hp',
   },
   {
     id: 'dmi_pro',
@@ -108,6 +117,7 @@ export const BLADES: BladeDefinition[] = [
     glowColor: '#ff7755',
     unlockLevel: 25,
     dmiProduct: true,
+    productId: 'blade-pro-series',
   },
   {
     id: 'dmi_master',
@@ -121,6 +131,7 @@ export const BLADES: BladeDefinition[] = [
     glowColor: '#ffaa00',
     unlockLevel: 30,
     dmiProduct: true,
+    productId: 'blade-master',
   },
 ];
 

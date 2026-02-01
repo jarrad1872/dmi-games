@@ -99,23 +99,34 @@ export class SliceableObject {
 
     // Dispatch to specific renderer based on object type
     switch (this.definition.id) {
-      case 'kiwi':
-        this.renderKiwi(ctx);
-        break;
-      case 'strawberry':
-        this.renderStrawberry(ctx);
-        break;
-      case 'apple':
-        this.renderApple(ctx);
+      case 'foam_block':
+        this.renderFoamBlock(ctx);
         break;
       case 'soap':
         this.renderSoap(ctx);
+        break;
+      case 'gel_pad':
+        this.renderGelPad(ctx);
         break;
       case 'kinetic_sand':
         this.renderKineticSand(ctx);
         break;
       case 'clay':
         this.renderClay(ctx);
+        break;
+      case 'insulation':
+        this.renderInsulation(ctx);
+        break;
+      case 'concrete':
+      case 'reinforced_concrete':
+        this.renderConcrete(ctx);
+        break;
+      case 'stone':
+      case 'granite':
+        this.renderStone(ctx);
+        break;
+      case 'brick':
+        this.renderBrick(ctx);
         break;
       default:
         this.renderGeneric(ctx);
@@ -124,186 +135,256 @@ export class SliceableObject {
     ctx.restore();
   }
 
-  private renderKiwi(ctx: CanvasRenderingContext2D): void {
+  private renderFoamBlock(ctx: CanvasRenderingContext2D): void {
     const w = this.width;
     const h = this.height;
 
     // Shadow
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
     ctx.beginPath();
     ctx.ellipse(8, h / 2 + 15, w * 0.4, 18, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Outer brown fuzzy skin (cylinder shape)
-    const skinGradient = ctx.createLinearGradient(-w / 2, 0, w / 2, 0);
-    skinGradient.addColorStop(0, '#8B6914');
-    skinGradient.addColorStop(0.3, '#A67C00');
-    skinGradient.addColorStop(0.5, '#C4A35A');
-    skinGradient.addColorStop(0.7, '#A67C00');
-    skinGradient.addColorStop(1, '#8B6914');
-
-    ctx.fillStyle = skinGradient;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, w / 2, h / 2, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Fuzzy texture dots
-    ctx.fillStyle = 'rgba(139, 90, 43, 0.4)';
-    for (let i = 0; i < 40; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const r = Math.random() * w * 0.4;
-      const x = Math.cos(angle) * r;
-      const y = Math.sin(angle) * r * (h / w);
-      ctx.beginPath();
-      ctx.arc(x, y, 2 + Math.random() * 2, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Top cut face showing green interior
-    const cutY = -h / 2 + 10;
-    ctx.save();
-    ctx.translate(0, cutY);
-
-    // Green flesh gradient
-    const greenGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, w * 0.4);
-    greenGradient.addColorStop(0, '#CCFF90');
-    greenGradient.addColorStop(0.3, '#AED581');
-    greenGradient.addColorStop(0.7, '#8BC34A');
-    greenGradient.addColorStop(1, '#689F38');
-
-    ctx.fillStyle = greenGradient;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, w * 0.42, h * 0.15, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // White center
-    ctx.fillStyle = '#F5F5DC';
-    ctx.beginPath();
-    ctx.ellipse(0, 0, w * 0.1, h * 0.04, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Seeds radiating from center
-    ctx.fillStyle = '#1B5E20';
-    for (let i = 0; i < 12; i++) {
-      const angle = (i / 12) * Math.PI * 2;
-      const seedX = Math.cos(angle) * w * 0.25;
-      const seedY = Math.sin(angle) * h * 0.08;
-      ctx.beginPath();
-      ctx.ellipse(seedX, seedY, 3, 1.5, angle, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    ctx.restore();
-
-    // Highlight on skin
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-    ctx.beginPath();
-    ctx.ellipse(-w * 0.2, -h * 0.2, w * 0.15, h * 0.1, -0.5, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  private renderStrawberry(ctx: CanvasRenderingContext2D): void {
-    const w = this.width;
-    const h = this.height;
-
-    // Shadow
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-    ctx.beginPath();
-    ctx.ellipse(8, h / 2 + 10, w * 0.35, 15, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Berry shape (heart-like)
-    const gradient = ctx.createRadialGradient(-w * 0.1, -h * 0.2, 0, 0, 0, h * 0.6);
-    gradient.addColorStop(0, '#FF6B6B');
-    gradient.addColorStop(0.5, '#E53935');
-    gradient.addColorStop(1, '#B71C1C');
+    // Foam block with soft gradient
+    const gradient = ctx.createLinearGradient(-w / 2, -h / 2, w / 2, h / 2);
+    gradient.addColorStop(0, '#ffcccc');
+    gradient.addColorStop(0.5, '#ff9999');
+    gradient.addColorStop(1, '#ff7777');
 
     ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.moveTo(0, -h * 0.4);
-    ctx.bezierCurveTo(w * 0.5, -h * 0.5, w * 0.5, h * 0.1, 0, h * 0.5);
-    ctx.bezierCurveTo(-w * 0.5, h * 0.1, -w * 0.5, -h * 0.5, 0, -h * 0.4);
+    this.drawRoundedRect(ctx, -w / 2, -h / 2, w, h, 8);
     ctx.fill();
 
-    // Seeds
-    ctx.fillStyle = '#FFEB3B';
-    const seedPositions = [
-      [-0.2, -0.2], [0.2, -0.15], [0, 0], [-0.25, 0.1], [0.25, 0.05],
-      [-0.15, 0.25], [0.15, 0.2], [0, 0.35], [-0.2, -0.05], [0.2, 0.15]
-    ];
-    for (const [sx, sy] of seedPositions) {
-      const seedX = sx * w;
-      const seedY = sy * h;
+    // Foam texture (small bubbles)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    for (let i = 0; i < 30; i++) {
+      const x = (Math.random() - 0.5) * w * 0.8;
+      const y = (Math.random() - 0.5) * h * 0.8;
       ctx.beginPath();
-      ctx.ellipse(seedX, seedY, 4, 2.5, Math.random() * 0.5, 0, Math.PI * 2);
+      ctx.arc(x, y, 2 + Math.random() * 4, 0, Math.PI * 2);
       ctx.fill();
-    }
-
-    // Green leaves at top
-    ctx.fillStyle = '#4CAF50';
-    for (let i = 0; i < 5; i++) {
-      const angle = (i / 5) * Math.PI - Math.PI / 2 + (Math.random() - 0.5) * 0.3;
-      ctx.save();
-      ctx.translate(0, -h * 0.4);
-      ctx.rotate(angle);
-      ctx.beginPath();
-      ctx.ellipse(0, -12, 5, 15, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
     }
 
     // Highlight
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.beginPath();
-    ctx.ellipse(-w * 0.15, -h * 0.2, w * 0.12, h * 0.08, -0.3, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+    this.drawRoundedRect(ctx, -w / 2 + 8, -h / 2 + 6, w - 16, h * 0.2, 5);
     ctx.fill();
   }
 
-  private renderApple(ctx: CanvasRenderingContext2D): void {
+  private renderGelPad(ctx: CanvasRenderingContext2D): void {
     const w = this.width;
     const h = this.height;
 
     // Shadow
     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
     ctx.beginPath();
-    ctx.ellipse(8, h / 2 + 10, w * 0.4, 15, 0, 0, Math.PI * 2);
+    ctx.ellipse(8, h / 2 + 12, w * 0.4, 15, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Apple body gradient
-    const gradient = ctx.createRadialGradient(-w * 0.15, -h * 0.15, 0, 0, 0, h * 0.55);
-    gradient.addColorStop(0, '#FF8A80');
-    gradient.addColorStop(0.4, '#E53935');
-    gradient.addColorStop(0.8, '#C62828');
-    gradient.addColorStop(1, '#8B0000');
+    // Gel pad with translucent look
+    const gradient = ctx.createRadialGradient(-w * 0.2, -h * 0.2, 0, 0, 0, w * 0.6);
+    gradient.addColorStop(0, '#90caf9');
+    gradient.addColorStop(0.5, '#64b5f6');
+    gradient.addColorStop(1, '#42a5f5');
 
     ctx.fillStyle = gradient;
-    ctx.beginPath();
-    // Apple shape with top indent
-    ctx.moveTo(0, -h * 0.42);
-    ctx.bezierCurveTo(w * 0.5, -h * 0.35, w * 0.5, h * 0.4, 0, h * 0.45);
-    ctx.bezierCurveTo(-w * 0.5, h * 0.4, -w * 0.5, -h * 0.35, 0, -h * 0.42);
+    this.drawRoundedRect(ctx, -w / 2, -h / 2, w, h, 15);
     ctx.fill();
 
-    // Stem
-    ctx.fillStyle = '#5D4037';
-    ctx.fillRect(-3, -h * 0.45, 6, 18);
+    // Internal bubbles (gel texture)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    for (let i = 0; i < 15; i++) {
+      const x = (Math.random() - 0.5) * w * 0.7;
+      const y = (Math.random() - 0.5) * h * 0.7;
+      ctx.beginPath();
+      ctx.arc(x, y, 3 + Math.random() * 6, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
-    // Leaf
-    ctx.fillStyle = '#66BB6A';
+    // Glossy highlight
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
     ctx.beginPath();
-    ctx.ellipse(12, -h * 0.42, 8, 15, 0.4, 0, Math.PI * 2);
+    ctx.ellipse(-w * 0.2, -h * 0.2, w * 0.25, h * 0.15, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  private renderInsulation(ctx: CanvasRenderingContext2D): void {
+    const w = this.width;
+    const h = this.height;
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+    ctx.beginPath();
+    ctx.ellipse(8, h / 2 + 15, w * 0.4, 18, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Highlights
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-    ctx.beginPath();
-    ctx.ellipse(-w * 0.2, -h * 0.15, w * 0.15, h * 0.12, -0.3, 0, Math.PI * 2);
+    // Yellow insulation foam
+    const gradient = ctx.createLinearGradient(-w / 2, -h / 2, w / 2, h / 2);
+    gradient.addColorStop(0, '#fff59d');
+    gradient.addColorStop(0.5, '#ffeb3b');
+    gradient.addColorStop(1, '#fdd835');
+
+    ctx.fillStyle = gradient;
+    this.drawRoundedRect(ctx, -w / 2, -h / 2, w, h, 5);
     ctx.fill();
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-    ctx.beginPath();
-    ctx.ellipse(-w * 0.1, -h * 0.05, w * 0.08, h * 0.06, -0.2, 0, Math.PI * 2);
+    // Foam texture (porous)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+    for (let i = 0; i < 40; i++) {
+      const x = (Math.random() - 0.5) * w * 0.9;
+      const y = (Math.random() - 0.5) * h * 0.9;
+      ctx.beginPath();
+      ctx.arc(x, y, 1 + Math.random() * 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Highlight
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    this.drawRoundedRect(ctx, -w / 2 + 6, -h / 2 + 5, w - 12, h * 0.2, 3);
     ctx.fill();
+  }
+
+  private renderConcrete(ctx: CanvasRenderingContext2D): void {
+    const w = this.width;
+    const h = this.height;
+    const hasRebar = this.definition.hasRebar && this.definition.rebarChance && Math.random() < this.definition.rebarChance;
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+    ctx.beginPath();
+    ctx.ellipse(10, h / 2 + 18, w * 0.42, 20, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Concrete block
+    const gradient = ctx.createLinearGradient(-w / 2, -h / 2, w / 2, h / 2);
+    gradient.addColorStop(0, '#9e9e9e');
+    gradient.addColorStop(0.3, '#888888');
+    gradient.addColorStop(0.7, '#757575');
+    gradient.addColorStop(1, '#616161');
+
+    ctx.fillStyle = gradient;
+    this.drawRoundedRect(ctx, -w / 2, -h / 2, w, h, 4);
+    ctx.fill();
+
+    // Aggregate texture (stones in concrete)
+    for (let i = 0; i < 25; i++) {
+      const x = (Math.random() - 0.5) * w * 0.85;
+      const y = (Math.random() - 0.5) * h * 0.85;
+      const size = 3 + Math.random() * 8;
+      ctx.fillStyle = Math.random() > 0.5 ? 'rgba(120, 120, 120, 0.5)' : 'rgba(180, 180, 180, 0.4)';
+      ctx.beginPath();
+      ctx.ellipse(x, y, size, size * 0.7, Math.random() * Math.PI, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Hidden rebar (visible as slight lines if present)
+    if (hasRebar) {
+      ctx.strokeStyle = 'rgba(139, 69, 19, 0.3)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(-w * 0.3, -h * 0.2);
+      ctx.lineTo(w * 0.3, -h * 0.2);
+      ctx.moveTo(-w * 0.3, h * 0.15);
+      ctx.lineTo(w * 0.3, h * 0.15);
+      ctx.stroke();
+    }
+
+    // Surface wear
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+    ctx.beginPath();
+    ctx.ellipse(w * 0.2, h * 0.1, 15, 10, 0.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  private renderStone(ctx: CanvasRenderingContext2D): void {
+    const w = this.width;
+    const h = this.height;
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+    ctx.beginPath();
+    ctx.ellipse(10, h / 2 + 18, w * 0.42, 20, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Stone with natural coloring
+    const gradient = ctx.createRadialGradient(-w * 0.2, -h * 0.2, 0, 0, 0, w * 0.7);
+    gradient.addColorStop(0, '#bdbdbd');
+    gradient.addColorStop(0.5, '#9e9e9e');
+    gradient.addColorStop(1, '#757575');
+
+    ctx.fillStyle = gradient;
+    this.drawRoundedRect(ctx, -w / 2, -h / 2, w, h, 6);
+    ctx.fill();
+
+    // Natural stone veins
+    ctx.strokeStyle = 'rgba(100, 100, 100, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-w * 0.4, -h * 0.1);
+    ctx.quadraticCurveTo(0, h * 0.1, w * 0.4, -h * 0.2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-w * 0.3, h * 0.3);
+    ctx.quadraticCurveTo(w * 0.1, h * 0.2, w * 0.35, h * 0.35);
+    ctx.stroke();
+
+    // Mineral flecks
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    for (let i = 0; i < 20; i++) {
+      const x = (Math.random() - 0.5) * w * 0.8;
+      const y = (Math.random() - 0.5) * h * 0.8;
+      ctx.beginPath();
+      ctx.arc(x, y, 1 + Math.random() * 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  private renderBrick(ctx: CanvasRenderingContext2D): void {
+    const w = this.width;
+    const h = this.height;
+    const hasRebar = this.definition.hasRebar && this.definition.rebarChance && Math.random() < this.definition.rebarChance;
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+    ctx.beginPath();
+    ctx.ellipse(10, h / 2 + 18, w * 0.42, 20, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Brick with DMI red
+    const gradient = ctx.createLinearGradient(-w / 2, -h / 2, w / 2, h / 2);
+    gradient.addColorStop(0, '#c62828');
+    gradient.addColorStop(0.3, '#a61c00');
+    gradient.addColorStop(0.7, '#8a1700');
+    gradient.addColorStop(1, '#6d1400');
+
+    ctx.fillStyle = gradient;
+    this.drawRoundedRect(ctx, -w / 2, -h / 2, w, h, 3);
+    ctx.fill();
+
+    // Brick texture (rough surface)
+    for (let i = 0; i < 30; i++) {
+      const x = (Math.random() - 0.5) * w * 0.9;
+      const y = (Math.random() - 0.5) * h * 0.9;
+      ctx.fillStyle = Math.random() > 0.5 ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.05)';
+      ctx.beginPath();
+      ctx.arc(x, y, 1 + Math.random() * 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Mortar line suggestion at edges
+    ctx.strokeStyle = 'rgba(200, 200, 200, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(-w / 2 + 2, -h / 2 + 2, w - 4, h - 4);
+
+    // Hidden rebar
+    if (hasRebar) {
+      ctx.strokeStyle = 'rgba(80, 80, 80, 0.25)';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(-w * 0.35, 0);
+      ctx.lineTo(w * 0.35, 0);
+      ctx.stroke();
+    }
   }
 
   private renderSoap(ctx: CanvasRenderingContext2D): void {
